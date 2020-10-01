@@ -7,3 +7,17 @@ This repo is dedicated for all poor souls out there who want to play around with
 ## How it's built
 The Azure Virtual WAN Playground is built using 💪Bicep which makes it so much easier to work with and read. Azure Virtual WAN with all it's dependencies betwen the hub and the connected services like VPN Gateways and Firewall (Secured Virtual WAN) makes it hard to follow in pure ARM template. If you haven't tested Bicep yet check out the [Bicep repository](https://github.com/Azure/bicep) for all info needed, I guaratee your'e going to love it! 
 
+## Topology
+The Azure Virtual WAN Playground deploys the following topology:
+
+- Azure Virtual WAN
+  - Virtual WAN Hub (Secured Virtual Hub) 
+  - Firewall Policy
+  - Azure Firewall
+- Spoke VNet
+  - Azure Bastion Service
+  - Virtual Machine
+ 
+
+## Improvements
+Azure Virtual WAN Playground will evolve together with Bicep language. When Bicep language supports the `condition` property it will be possible to decide which features will be deployed using paramters.
