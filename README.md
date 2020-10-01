@@ -1,4 +1,4 @@
-# Azure Virtual WAN Playground (Coming soon)
+# Azure Virtual WAN Playground
 Welcome to the Azure Virtual WAN Playground repository! Your one-stop shop for Azure Virtual WAN lab material.
 
 ## What is Azure Virtual WAN Playground?
