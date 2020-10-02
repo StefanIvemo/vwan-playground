@@ -160,6 +160,8 @@
         "enableInternetSecurity": true
       },
       "dependsOn": [
+        "[resourceId('Microsoft.Network/azureFirewalls', variables('fwname'))]",
+        "[resourceId('Microsoft.Network/virtualHubs', variables('hubname'))]",
         "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetname'))]"
       ]
     },

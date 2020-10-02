@@ -132,8 +132,11 @@ resource connection 'Microsoft.Network/virtualHubs/hubVirtualNetworkConnections@
         allowHubToRemoteVnetTransit: true
         allowRemoteVnetToUseHubVnetGateways: true
         enableInternetSecurity: true      
-
-    }    
+    }
+    dependsOn: [
+        hub
+        firewall
+    ]    
 }
 
 resource policy 'Microsoft.Network/firewallPolicies@2020-05-01' = {
