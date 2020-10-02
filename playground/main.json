@@ -134,6 +134,7 @@
       }
     },
     "storagename": "[concat('vm01', uniqueString(resourceGroup().id))]",
+    "loganalyticsname": "[concat('fwlogs', uniqueString(resourceGroup().id))]",
     "vnetname": "spoke1-vnet",
     "connectionname": "[format('{0}-spoke1-vnet-connection', parameters('nameprefix'))]",
     "bastionname": "[format('{0}-bastion', variables('vnetname'))]",
@@ -210,6 +211,17 @@
         "threatIntelMode": "Alert",
         "threatIntelWhitelist": {
           "ipAddresses": []
+        }
+      }
+    },
+    {
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "apiVersion": "2020-03-01-preview",
+      "name": "[variables('loganalyticsname')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "sku": {
+          "name": "pergb2018"
         }
       }
     },
