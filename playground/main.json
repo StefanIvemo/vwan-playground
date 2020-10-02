@@ -127,6 +127,7 @@
     "wanname": "[format('{0}-vwan', parameters('nameprefix'))]",
     "hubname": "[format('{0}-vhub-{1}', parameters('nameprefix'), parameters('location'))]",
     "fwname": "[format('{0}-fw-{1}', parameters('nameprefix'), parameters('location'))]",
+    "hubvpngwname": "[format('{0}-vhub-{1}-vpngw', parameters('nameprefix'), parameters('location'))]",
     "policyname": "[format('{0}-fw-policy-global', parameters('nameprefix'))]",
     "hubfirewallid": {
       "azureFirewall": {
@@ -153,7 +154,11 @@
     "onpremnicname": "[format('{0}-nic', variables('onpremvmname'))]",
     "onpremdiskname": "[format('{0}-OSDisk', variables('onpremvmname'))]",
     "onpremvmsubnetref": "[format('{0}/subnets/snet-servers', resourceId('Microsoft.Network/virtualNetworks', variables('onpremvnetname')))]",
-    "onprembastionsubnetref": "[format('{0}/subnets/AzureBastionSubnet', resourceId('Microsoft.Network/virtualNetworks', variables('onpremvnetname')))]"
+    "onprembastionsubnetref": "[format('{0}/subnets/AzureBastionSubnet', resourceId('Microsoft.Network/virtualNetworks', variables('onpremvnetname')))]",
+    "onpremvpnsitename": "onprem-vpnsite",
+    "onpremvpngwname": "[format('{0}-vpn-vgw', variables('onpremvnetname'))]",
+    "onpremvpngwpipname": "[format('{0}-pip', variables('onpremvpngwname'))]",
+    "onpremvpngwsubnetref": "[format('{0}/subnets/GatewaySubnet', resourceId('Microsoft.Network/virtualNetworks', variables('vnetname')))]"
   },
   "resources": [
     {
@@ -200,6 +205,61 @@
         "[resourceId('Microsoft.Network/azureFirewalls', variables('fwname'))]",
         "[resourceId('Microsoft.Network/virtualHubs', variables('hubname'))]",
         "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetname'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/vpnSites",
+      "apiVersion": "2020-05-01",
+      "name": "[variables('onpremvpnsitename')]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": "[parameters('onpremvnetaddressprefix')]"
+        },
+        "bgpProperties": {
+          "asn": 65517,
+          "bgpPeeringAddress": "[reference(resourceId('Microsoft.Network/virtualNetworkGateways', variables('onpremvpngwname'))).BgpSettings.BgpPeeringAddress]",
+          "peerWeight": 0
+        },
+        "deviceProperties": {
+          "linkSpeedInMbps": 0
+        },
+        "ipAddress": "[reference(resourceId('Microsoft.Network/virtualNetworkGateways', variables('onpremvpngwname'))).BgpSettings.BgpPeeringAddresses.TunnelIpAddresses]",
+        "virtualWan": {
+          "id": "[resourceId('Microsoft.Network/virtualWans', variables('wanname'))]"
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworkGateways', variables('onpremvpngwname'))]",
+        "[resourceId('Microsoft.Network/virtualWans', variables('wanname'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/vpnGateways",
+      "apiVersion": "2020-05-01",
+      "name": "[variables('hubvpngwname')]",
+      "properties": {
+        "connections": [
+          {
+            "name": "HubToOnPremConnection",
+            "properties": {
+              "connectionBandwidth": 10,
+              "enableBgp": true,
+              "remoteVpnSite": {
+                "id": "[resourceId('Microsoft.Network/vpnSites', variables('onpremvpnsitename'))]"
+              }
+            }
+          }
+        ],
+        "virtualHub": {
+          "id": "[resourceId('Microsoft.Network/virtualHubs', variables('hubname'))]"
+        },
+        "bgpSettings": {
+          "asn": 65515
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualHubs', variables('hubname'))]",
+        "[resourceId('Microsoft.Network/vpnSites', variables('onpremvpnsitename'))]"
       ]
     },
     {
@@ -278,6 +338,56 @@
           }
         ]
       }
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2020-05-01",
+      "name": "[variables('onpremvpngwpipname')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "Standard"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Static"
+      }
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworkGateways",
+      "apiVersion": "2020-05-01",
+      "name": "[variables('onpremvpngwname')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "gatewayType": "vpn",
+        "ipConfigurations": [
+          {
+            "name": "default",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('onpremvpngwsubnetref')]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('onpremvpngwpipname'))]"
+              }
+            }
+          }
+        ],
+        "activeActive": false,
+        "enableBgp": true,
+        "bgpSettings": {
+          "asn": 65517
+        },
+        "vpnType": "RouteBased",
+        "vpnGatewayGeneration": "Generation1",
+        "sku": {
+          "name": "VpnGw1AZ",
+          "tier": "VpnGw1AZ"
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('onpremvpngwpipname'))]",
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetname'))]"
+      ]
     },
     {
       "type": "Microsoft.Network/networkSecurityGroups",

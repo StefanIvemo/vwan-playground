@@ -105,6 +105,7 @@ param vmsize string {
 var wanname = '${nameprefix}-vwan'
 var hubname = '${nameprefix}-vhub-${location}'
 var fwname = '${nameprefix}-fw-${location}'
+var hubvpngwname = '${nameprefix}-vhub-${location}-vpngw'
 var policyname = '${nameprefix}-fw-policy-global'
 var hubfirewallid = {
     azureFirewall: {
@@ -136,6 +137,11 @@ var onpremnicname =  '${onpremvmname}-nic'
 var onpremdiskname =  '${onpremvmname}-OSDisk'
 var onpremvmsubnetref = '${onpremvnet.id}/subnets/snet-servers'
 var onprembastionsubnetref = '${onpremvnet.id}/subnets/AzureBastionSubnet'
+var onpremvpnsitename = 'onprem-vpnsite'
+var onpremvpngwname = '${onpremvnetname}-vpn-vgw'
+var onpremvpngwpipname = '${onpremvpngwname}-pip'
+var onpremvpngwsubnetref = '${onpremvnet.id}/subnets/GatewaySubnet'
+
 
 resource wan 'Microsoft.Network/virtualWans@2020-05-01' = {
     name: wanname
@@ -174,6 +180,52 @@ resource connection 'Microsoft.Network/virtualHubs/hubVirtualNetworkConnections@
         hub
         firewall
     ]     
+}
+
+resource onpremvpnsite 'Microsoft.Network/vpnSites@2020-05-01' = {
+    name: onpremvpnsitename
+    properties: {
+        addressSpace :{
+            addressPrefixes: onpremvnetaddressprefix
+        }
+        bgpProperties: {
+            asn: 65517
+            bgpPeeringAddress: onpremvpngw.properties.BgpSettings.BgpPeeringAddress
+            peerWeight: 0
+        }
+        deviceProperties: {
+            linkSpeedInMbps: 0
+        }
+        ipAddress: onpremvpngw.properties.BgpSettings.BgpPeeringAddresses.TunnelIpAddresses
+        virtualWan: {
+            id: wan.id
+        }
+        
+    }       
+}
+
+resource hubvpngw 'Microsoft.Network/vpnGateways@2020-05-01' = {
+    name: hubvpngwname
+    properties: {
+        connections: [
+            {
+                name: 'HubToOnPremConnection'
+                properties: {
+                    connectionBandwidth: 10
+                    enableBgp: true
+                    remoteVpnSite: {
+                        id: onpremvpnsite.id
+                    }
+                }
+            }
+        ]
+        virtualHub: {
+            id: hub.id
+        }
+        bgpSettings: {
+            asn: 65515
+        }     
+    }       
 }
 
 resource policy 'Microsoft.Network/firewallPolicies@2020-05-01' = {
@@ -244,6 +296,67 @@ resource firewall 'Microsoft.Network/azureFirewalls@2020-05-01' = {
         ]
     }
 }
+
+resource onpremvpngwpip 'Microsoft.Network/publicIPAddresses@2020-05-01' = {
+    name: onpremvpngwpipname
+    location: location
+    sku: {
+      name: 'Standard'
+    }
+    properties: {
+      publicIPAllocationMethod: 'Static'    
+    }
+}
+
+resource onpremvpngw 'Microsoft.Network/virtualNetworkGateways@2020-05-01' = {
+    name: onpremvpngwname
+    location: location    
+    properties: {
+        gatewayType: 'vpn'
+        ipConfigurations: [
+            {
+                name: 'default'
+                properties: {
+                    privateIPAllocationMethod: 'Dynamic'
+                    subnet: {
+                        id: onpremvpngwsubnetref
+                    }
+                    publicIPAddress: {
+                        id: onpremvpngwpip.id
+                    }
+                }
+            }
+        ]
+        activeActive: false
+        enableBgp: true
+        bgpSettings: {
+            asn: 65517
+        }
+        vpnType: 'RouteBased'
+        vpnGatewayGeneration: 'Generation1'
+        sku: {
+            name: 'VpnGw1AZ'
+            tier: 'VpnGw1AZ'
+        }
+    }
+}
+/*
+resource localnetworkgw 'Microsoft.Network/publicIPAddresses@2020-05-01' = {
+    name: 'onprem-hub-lgw'
+    location: location    
+    properties: {
+        localNetworkAddressSpace:{
+            AddressPrefixes: '${hubvpngw.properties.bgpPeeringAddress}/32'
+        }
+        gatewayIpAddress: hubvpngw.properties.ipAddress
+        bgpSettings: {
+            asn: 65515
+            bgpPeeringAddress: hubvpngw.properties.bgpPeeringAddress
+        }
+    }
+}
+*/
+
 
 resource bastionnsg 'Microsoft.Network/networkSecurityGroups@2019-08-01' = {
     name: bastionnsgname
@@ -644,51 +757,4 @@ resource nic 'Microsoft.Network/networkInterfaces@2020-05-01' = {
                   }
                 }
             }
-          }
-    
-
-/*
-resource wanvnetroutetable 'Microsoft.Network/virtualHubs/routeTables@2020-05-01' = {
-    name: '${hubname}/VNetRouteTable'
-    location: location
-    properties: {
-        routes: [
-            {
-                destinationType: 'CIDR'
-                    destinations: [
-                        vnetaddressprefix
-                        '0.0.0.0/0'
-                    ]
-                    nextHopType: 'IPAddress'
-                        nextHops: [
-                            '10.0.0.68'
-                        ]
-            }
-        ]
-        attachedConnections: [
-            'All_Vnets'
-        ]
-    }        
-}
-
-resource wanbranchroutetable 'Microsoft.Network/virtualHubs/routeTables@2020-05-01' = {
-    name: '${hubname}/BranchRouteTable'
-    location: location
-    properties: {
-        routes: [
-            {
-                destinationType: 'CIDR'
-                    destinations: [
-                        vnetaddressprefix
-                    ]
-                    nextHopType: 'IPAddress'
-                        nextHops: [
-                            '10.0.0.68'
-                        ]
-            }
-        ]
-        attachedConnections: [
-            'All_Branches'
-        ]
-    }        
-}*/
+          }   
