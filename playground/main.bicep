@@ -80,6 +80,9 @@ param onpremvnetgatewysubnetprefix string {
       description: 'Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet'
     }
 }
+param psk string {
+    secure:true
+}
 param adminusername string
 param adminpassword string {
     secure:true
@@ -106,7 +109,7 @@ var wanname = '${nameprefix}-vwan'
 var hubname = '${nameprefix}-vhub-${location}'
 var fwname = '${nameprefix}-fw-${location}'
 var hubvpngwname = '${nameprefix}-vhub-${location}-vpngw'
-var policyname = '${nameprefix}-fw-policy-global'
+var policyname = '${fwname}-policy'
 var hubfirewallid = {
     azureFirewall: {
         id: firewallid
@@ -184,28 +187,29 @@ resource connection 'Microsoft.Network/virtualHubs/hubVirtualNetworkConnections@
 
 resource onpremvpnsite 'Microsoft.Network/vpnSites@2020-05-01' = {
     name: onpremvpnsitename
+    location: location
     properties: {
         addressSpace :{
             addressPrefixes: onpremvnetaddressprefix
         }
         bgpProperties: {
-            asn: 65517
+            asn: 65010
             bgpPeeringAddress: onpremvpngw.properties.BgpSettings.BgpPeeringAddress
             peerWeight: 0
         }
         deviceProperties: {
             linkSpeedInMbps: 0
         }
-        ipAddress: onpremvpngw.properties.BgpSettings.BgpPeeringAddresses.TunnelIpAddresses
+        ipAddress: onpremvpngwpip.properties.IpAddress
         virtualWan: {
             id: wan.id
-        }
-        
+        }        
     }       
 }
 
 resource hubvpngw 'Microsoft.Network/vpnGateways@2020-05-01' = {
     name: hubvpngwname
+    location: location   
     properties: {
         connections: [
             {
@@ -213,6 +217,7 @@ resource hubvpngw 'Microsoft.Network/vpnGateways@2020-05-01' = {
                 properties: {
                     connectionBandwidth: 10
                     enableBgp: true
+                    sharedKey: psk
                     remoteVpnSite: {
                         id: onpremvpnsite.id
                     }
@@ -330,7 +335,7 @@ resource onpremvpngw 'Microsoft.Network/virtualNetworkGateways@2020-05-01' = {
         activeActive: false
         enableBgp: true
         bgpSettings: {
-            asn: 65517
+            asn: 65010
         }
         vpnType: 'RouteBased'
         vpnGatewayGeneration: 'Generation1'
@@ -340,22 +345,41 @@ resource onpremvpngw 'Microsoft.Network/virtualNetworkGateways@2020-05-01' = {
         }
     }
 }
-/*
+
 resource localnetworkgw 'Microsoft.Network/publicIPAddresses@2020-05-01' = {
     name: 'onprem-hub-lgw'
     location: location    
     properties: {
         localNetworkAddressSpace:{
-            AddressPrefixes: '${hubvpngw.properties.bgpPeeringAddress}/32'
+            AddressPrefixes: ''
         }
-        gatewayIpAddress: hubvpngw.properties.ipAddress
+        gatewayIpAddress: hubvpngw.properties.ipConfigurations[0].publicIpAddress
         bgpSettings: {
             asn: 65515
-            bgpPeeringAddress: hubvpngw.properties.bgpPeeringAddress
+            bgpPeeringAddress: hubvpngw.properties.ipConfigurations[0].privateIpAddress
         }
     }
 }
-*/
+
+resource s2sconnection 'Microsoft.Network/connections@2020-05-01' = {
+    name: 'onprem-hub-cn'
+    location: location    
+    properties: {
+        connectionType: 'IPsec'
+        connectionProtocol: 'IKEv2'
+        virtualNetworkGateway1: {
+            id: onpremvpngw.id
+        }
+        enableBgp: true
+        sharedKey: psk
+        localNetworkGateway2: {
+            id: localnetworkgw.id
+        }
+
+        
+    }
+}
+
 
 
 resource bastionnsg 'Microsoft.Network/networkSecurityGroups@2019-08-01' = {
