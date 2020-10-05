@@ -346,7 +346,7 @@ resource onpremvpngw 'Microsoft.Network/virtualNetworkGateways@2020-05-01' = {
     }
 }
 
-resource localnetworkgw 'Microsoft.Network/publicIPAddresses@2020-05-01' = {
+resource localnetworkgw 'Microsoft.Network/localNetworkGateways@2020-05-01' = {
     name: 'onprem-hub-lgw'
     location: location    
     properties: {

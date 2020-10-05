@@ -397,7 +397,7 @@
       ]
     },
     {
-      "type": "Microsoft.Network/publicIPAddresses",
+      "type": "Microsoft.Network/localNetworkGateways",
       "apiVersion": "2020-05-01",
       "name": "onprem-hub-lgw",
       "location": "[parameters('location')]",
@@ -429,11 +429,11 @@
         "enableBgp": true,
         "sharedKey": "[parameters('psk')]",
         "localNetworkGateway2": {
-          "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'onprem-hub-lgw')]"
+          "id": "[resourceId('Microsoft.Network/localNetworkGateways', 'onprem-hub-lgw')]"
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Network/publicIPAddresses', 'onprem-hub-lgw')]",
+        "[resourceId('Microsoft.Network/localNetworkGateways', 'onprem-hub-lgw')]",
         "[resourceId('Microsoft.Network/virtualNetworkGateways', variables('onpremvpngwname'))]"
       ]
     },
