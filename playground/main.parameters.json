@@ -1,0 +1,61 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "value": ""
+        },
+        "nameprefix": {
+            "value": "contoso"
+        },
+        "wantype": {
+            "value": "Standard"
+        },
+        "wanaddressprefix": {
+            "value": "10.0.0.0/24"
+        },
+        "fwpublicipcount": {
+            "value": 1
+        },
+        "firewallid": {
+            "value": ""
+        },
+        "vnetaddressprefix": {
+            "value": "10.0.1.0/24"
+        },
+        "vnetserversubnetprefix": {
+            "value": "10.0.1.0/26"
+        },
+        "vnetbastionsubnetprefix": {
+            "value": "10.0.1.64/26"
+        },
+        "onpremvnetaddressprefix": {
+            "value": "10.20.0.0/24"
+        },
+        "onpremvnetserversubnetprefix": {
+            "value": "10.20.0.0/26"
+        },
+        "onpremvnetbastionsubnetprefix": {
+            "value": "10.20.0.64/26"
+        },
+        "onpremvnetgatewysubnetprefix": {
+            "value": "10.20.0.128/26"
+        },
+        "psk": {
+            "value": "" 
+        },
+        "adminusername": {
+            "value": "" 
+        },
+        "adminpassword": {
+            "value": ""
+        },
+        "windowsosversion": {
+            "value": "2019-Datacenter"
+        },
+        "vmsize": {
+            "value": "Standard_D2_v3"
+        }
+       
+    }       
+}
