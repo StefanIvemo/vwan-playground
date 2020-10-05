@@ -38,3 +38,6 @@ Azure Virtual WAN Playground will evolve over time with new features added regul
 - Azure Firewall default rule set added to Firewall Policy.
 
 Other improvements can be requested by creating a new issue.
+
+## Contributing
+If you find this project interested and want to contribute, please feel free to submit Pull Requests with suggested improvements.
