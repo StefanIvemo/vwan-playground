@@ -57,25 +57,25 @@ param vnetbastionsubnetprefix string {
     }
 }
 param onpremvnetaddressprefix string {
-    default: '10.0.2.0/24'
+    default: '10.20.0.0/24'
     metadata: {
       description: 'Specify the address prefix to use for the spoke VNet'
     }
 }
 param onpremvnetserversubnetprefix string {
-    default: '10.0.2.0/26'
+    default: '10.20.0.0/26'
     metadata: {
       description: 'Specify the address prefix to use for server subnet in the spoke VNet'
     }
 }
 param onpremvnetbastionsubnetprefix string {
-    default: '10.0.2.64/26'
+    default: '10.20.0.64/26'
     metadata: {
       description: 'Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet'
     }
 }
 param onpremvnetgatewysubnetprefix string {
-    default: '10.0.2.128/26'
+    default: '10.20.0.128/26'
     metadata: {
       description: 'Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet'
     }
@@ -116,7 +116,6 @@ var hubfirewallid = {
     }
 }
 var storagename = concat('vm01', uniqueString(resourceGroup().id))
-var loganalyticsname = concat('fwlogs', uniqueString(resourceGroup().id))
 
 /*Variables for spoke VNet and VM */
 var vnetname = 'spoke1-vnet'
@@ -240,16 +239,6 @@ resource policy 'Microsoft.Network/firewallPolicies@2020-05-01' = {
         threatIntelMode: 'Alert'
         threatIntelWhitelist: {
             ipAddresses: []
-        }
-    }
-}
-
-resource loganalytics 'Microsoft.OperationalInsights/workspaces@2020-03-01-preview' = {
-    name: loganalyticsname
-    location: location
-    properties: {
-        sku: {
-            name: 'pergb2018'
         }
     }
 }

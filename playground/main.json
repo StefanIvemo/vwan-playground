@@ -74,28 +74,28 @@
       "metadata": {
         "description": "Specify the address prefix to use for the spoke VNet"
       },
-      "defaultValue": "10.0.2.0/24"
+      "defaultValue": "10.20.0.0/24"
     },
     "onpremvnetserversubnetprefix": {
       "type": "string",
       "metadata": {
         "description": "Specify the address prefix to use for server subnet in the spoke VNet"
       },
-      "defaultValue": "10.0.2.0/26"
+      "defaultValue": "10.20.0.0/26"
     },
     "onpremvnetbastionsubnetprefix": {
       "type": "string",
       "metadata": {
         "description": "Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet"
       },
-      "defaultValue": "10.0.2.64/26"
+      "defaultValue": "10.20.0.64/26"
     },
     "onpremvnetgatewysubnetprefix": {
       "type": "string",
       "metadata": {
         "description": "Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet"
       },
-      "defaultValue": "10.0.2.128/26"
+      "defaultValue": "10.20.0.128/26"
     },
     "psk": {
       "type": "secureString"
@@ -138,7 +138,6 @@
       }
     },
     "storagename": "[concat('vm01', uniqueString(resourceGroup().id))]",
-    "loganalyticsname": "[concat('fwlogs', uniqueString(resourceGroup().id))]",
     "vnetname": "spoke1-vnet",
     "connectionname": "[format('{0}-spoke1-vnet-connection', parameters('nameprefix'))]",
     "bastionname": "[format('{0}-bastion', variables('vnetname'))]",
@@ -278,17 +277,6 @@
         "threatIntelMode": "Alert",
         "threatIntelWhitelist": {
           "ipAddresses": []
-        }
-      }
-    },
-    {
-      "type": "Microsoft.OperationalInsights/workspaces",
-      "apiVersion": "2020-03-01-preview",
-      "name": "[variables('loganalyticsname')]",
-      "location": "[parameters('location')]",
-      "properties": {
-        "sku": {
-          "name": "pergb2018"
         }
       }
     },
