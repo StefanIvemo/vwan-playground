@@ -11,13 +11,30 @@ The Azure Virtual WAN Playground is built using 💪Bicep which makes it so much
 The Azure Virtual WAN Playground deploys the following topology:
 
 - Azure Virtual WAN
-  - Virtual WAN Hub (Secured Virtual Hub) 
+  - Virtual WAN Hub (Secured Virtual Hub)
   - Firewall Policy
   - Azure Firewall
+  - VPN Site (onprem-vpnsite)
+  - Virtual Network Connection (spoke1-vnet)
 - Spoke VNet
   - Azure Bastion Service
   - Virtual Machine
+- On-Prem VNet
+  - Azure Bastion Service
+  - Virtual Machine
+  - VPN Gateway
+    - Connection (On-Prem to WAN Hub)
+      - Local Network Gateway
  
+<img src="https://github.com/StefanIvemo/vwan-playground/blob/on-prem-vnet/media/vwan-playground-topology.png?raw=true">
 
 ## Improvements
-Azure Virtual WAN Playground will evolve together with Bicep language. When Bicep language supports the `condition` property it will be possible to decide which features will be deployed using paramters.
+Azure Virtual WAN Playground will evolve over time with new features added regularly. The following improvements are planned:
+
+- When Bicep language supports the `condition` property it will be possible to decide which features will be deployed using parameters.
+- A cleanup script will be added that removes all resources in the correct order for quick removal of the solution.
+- Diagnostic settings for Azure Firewall sending all logs to Log Analytics workspace with Azure Sentinel enabled and Azure Firewall Workbook deployed.
+- User VPN Gateway and configuration.
+- Azure Firewall default rule set added to Firewall Policy.
+
+Other improvements can be requested by creating a new issue
