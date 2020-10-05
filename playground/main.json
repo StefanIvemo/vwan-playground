@@ -39,7 +39,7 @@
       "metadata": {
         "description": "Specify the amount of public IPs for the FIrewall"
       },
-      "defaultValue": 2
+      "defaultValue": 1
     },
     "firewallid": {
       "type": "string",
@@ -68,6 +68,37 @@
         "description": "Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet"
       },
       "defaultValue": "10.0.1.64/26"
+    },
+    "onpremvnetaddressprefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Specify the address prefix to use for the spoke VNet"
+      },
+      "defaultValue": "10.20.0.0/24"
+    },
+    "onpremvnetserversubnetprefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Specify the address prefix to use for server subnet in the spoke VNet"
+      },
+      "defaultValue": "10.20.0.0/26"
+    },
+    "onpremvnetbastionsubnetprefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet"
+      },
+      "defaultValue": "10.20.0.64/26"
+    },
+    "onpremvnetgatewysubnetprefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet"
+      },
+      "defaultValue": "10.20.0.128/26"
+    },
+    "psk": {
+      "type": "secureString"
     },
     "adminusername": {
       "type": "string"
@@ -99,24 +130,37 @@
     "wanname": "[format('{0}-vwan', parameters('nameprefix'))]",
     "hubname": "[format('{0}-vhub-{1}', parameters('nameprefix'), parameters('location'))]",
     "fwname": "[format('{0}-fw-{1}', parameters('nameprefix'), parameters('location'))]",
-    "policyname": "[format('{0}-fw-policy-global', parameters('nameprefix'))]",
-    "vnetname": "[format('{0}-spoke1-vnet', parameters('nameprefix'))]",
-    "connectionname": "[format('{0}-spoke1-vnet-connection', parameters('nameprefix'))]",
-    "bastionname": "[format('{0}-bastion', variables('vnetname'))]",
-    "bastionnsgname": "[format('{0}-AzureBastionSubnet-nsg', variables('vnetname'))]",
-    "bastionipname": "[format('{0}-pip', variables('bastionname'))]",
-    "vnetroutetablename": "[format('{0}-snet-servers-route', variables('vnetname'))]",
+    "hubvpngwname": "[format('{0}-vhub-{1}-vpngw', parameters('nameprefix'), parameters('location'))]",
+    "policyname": "[format('{0}-policy', variables('fwname'))]",
     "hubfirewallid": {
       "azureFirewall": {
         "id": "[parameters('firewallid')]"
       }
     },
     "storagename": "[concat('vm01', uniqueString(resourceGroup().id))]",
+    "vnetname": "spoke1-vnet",
+    "connectionname": "[format('{0}-spoke1-vnet-connection', parameters('nameprefix'))]",
+    "bastionname": "[format('{0}-bastion', variables('vnetname'))]",
+    "bastionnsgname": "[format('{0}-AzureBastionSubnet-nsg', variables('vnetname'))]",
+    "bastionipname": "[format('{0}-pip', variables('bastionname'))]",
     "vmname": "spoke1-vm01",
     "nicname": "[format('{0}-nic', variables('vmname'))]",
     "diskname": "[format('{0}-OSDisk', variables('vmname'))]",
     "vmsubnetref": "[format('{0}/subnets/snet-servers', resourceId('Microsoft.Network/virtualNetworks', variables('vnetname')))]",
-    "bastionsubnetref": "[format('{0}/subnets/AzureBastionSubnet', resourceId('Microsoft.Network/virtualNetworks', variables('vnetname')))]"
+    "bastionsubnetref": "[format('{0}/subnets/AzureBastionSubnet', resourceId('Microsoft.Network/virtualNetworks', variables('vnetname')))]",
+    "onpremvnetname": "onprem-vnet",
+    "onprembastionname": "[format('{0}-bastion', variables('onpremvnetname'))]",
+    "onprembastionnsgname": "[format('{0}-AzureBastionSubnet-nsg', variables('onpremvnetname'))]",
+    "onprembastionipname": "[format('{0}-pip', variables('onprembastionname'))]",
+    "onpremvmname": "onprem-vm01",
+    "onpremnicname": "[format('{0}-nic', variables('onpremvmname'))]",
+    "onpremdiskname": "[format('{0}-OSDisk', variables('onpremvmname'))]",
+    "onpremvmsubnetref": "[format('{0}/subnets/snet-servers', resourceId('Microsoft.Network/virtualNetworks', variables('onpremvnetname')))]",
+    "onprembastionsubnetref": "[format('{0}/subnets/AzureBastionSubnet', resourceId('Microsoft.Network/virtualNetworks', variables('onpremvnetname')))]",
+    "onpremvpnsitename": "onprem-vpnsite",
+    "onpremvpngwname": "[format('{0}-vpn-vgw', variables('onpremvnetname'))]",
+    "onpremvpngwpipname": "[format('{0}-pip', variables('onpremvpngwname'))]",
+    "onpremvpngwsubnetref": "[format('{0}/subnets/GatewaySubnet', resourceId('Microsoft.Network/virtualNetworks', variables('onpremvnetname')))]"
   },
   "resources": [
     {
@@ -163,6 +207,65 @@
         "[resourceId('Microsoft.Network/azureFirewalls', variables('fwname'))]",
         "[resourceId('Microsoft.Network/virtualHubs', variables('hubname'))]",
         "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetname'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/vpnSites",
+      "apiVersion": "2020-05-01",
+      "name": "[variables('onpremvpnsitename')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": "[parameters('onpremvnetaddressprefix')]"
+        },
+        "bgpProperties": {
+          "asn": 65010,
+          "bgpPeeringAddress": "[reference(resourceId('Microsoft.Network/virtualNetworkGateways', variables('onpremvpngwname'))).BgpSettings.BgpPeeringAddress]",
+          "peerWeight": 0
+        },
+        "deviceProperties": {
+          "linkSpeedInMbps": 0
+        },
+        "ipAddress": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('onpremvpngwpipname'))).IpAddress]",
+        "virtualWan": {
+          "id": "[resourceId('Microsoft.Network/virtualWans', variables('wanname'))]"
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworkGateways', variables('onpremvpngwname'))]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('onpremvpngwpipname'))]",
+        "[resourceId('Microsoft.Network/virtualWans', variables('wanname'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/vpnGateways",
+      "apiVersion": "2020-05-01",
+      "name": "[variables('hubvpngwname')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "connections": [
+          {
+            "name": "HubToOnPremConnection",
+            "properties": {
+              "connectionBandwidth": 10,
+              "enableBgp": true,
+              "sharedKey": "[parameters('psk')]",
+              "remoteVpnSite": {
+                "id": "[resourceId('Microsoft.Network/vpnSites', variables('onpremvpnsitename'))]"
+              }
+            }
+          }
+        ],
+        "virtualHub": {
+          "id": "[resourceId('Microsoft.Network/virtualHubs', variables('hubname'))]"
+        },
+        "bgpSettings": {
+          "asn": 65515
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualHubs', variables('hubname'))]",
+        "[resourceId('Microsoft.Network/vpnSites', variables('onpremvpnsitename'))]"
       ]
     },
     {
@@ -230,6 +333,97 @@
           }
         ]
       }
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2020-05-01",
+      "name": "[variables('onpremvpngwpipname')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "Standard"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Static"
+      }
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworkGateways",
+      "apiVersion": "2020-05-01",
+      "name": "[variables('onpremvpngwname')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "gatewayType": "vpn",
+        "ipConfigurations": [
+          {
+            "name": "default",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('onpremvpngwsubnetref')]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('onpremvpngwpipname'))]"
+              }
+            }
+          }
+        ],
+        "activeActive": false,
+        "enableBgp": true,
+        "bgpSettings": {
+          "asn": 65010
+        },
+        "vpnType": "RouteBased",
+        "vpnGatewayGeneration": "Generation1",
+        "sku": {
+          "name": "VpnGw1AZ",
+          "tier": "VpnGw1AZ"
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('onpremvnetname'))]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('onpremvpngwpipname'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/localNetworkGateways",
+      "apiVersion": "2020-05-01",
+      "name": "onprem-hub-lgw",
+      "location": "[parameters('location')]",
+      "properties": {
+        "localNetworkAddressSpace": {
+          "AddressPrefixes": ""
+        },
+        "gatewayIpAddress": "[reference(resourceId('Microsoft.Network/vpnGateways', variables('hubvpngwname'))).ipConfigurations[0].publicIpAddress]",
+        "bgpSettings": {
+          "asn": 65515,
+          "bgpPeeringAddress": "[reference(resourceId('Microsoft.Network/vpnGateways', variables('hubvpngwname'))).ipConfigurations[0].privateIpAddress]"
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/vpnGateways', variables('hubvpngwname'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/connections",
+      "apiVersion": "2020-05-01",
+      "name": "onprem-hub-cn",
+      "location": "[parameters('location')]",
+      "properties": {
+        "connectionType": "IPsec",
+        "connectionProtocol": "IKEv2",
+        "virtualNetworkGateway1": {
+          "id": "[resourceId('Microsoft.Network/virtualNetworkGateways', variables('onpremvpngwname'))]"
+        },
+        "enableBgp": true,
+        "sharedKey": "[parameters('psk')]",
+        "localNetworkGateway2": {
+          "id": "[resourceId('Microsoft.Network/localNetworkGateways', 'onprem-hub-lgw')]"
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/localNetworkGateways', 'onprem-hub-lgw')]",
+        "[resourceId('Microsoft.Network/virtualNetworkGateways', variables('onpremvpngwname'))]"
+      ]
     },
     {
       "type": "Microsoft.Network/networkSecurityGroups",
@@ -360,6 +554,167 @@
       }
     },
     {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2020-05-01",
+      "name": "[variables('onpremvnetname')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[parameters('onpremvnetaddressprefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "snet-servers",
+            "properties": {
+              "addressPrefix": "[parameters('onpremvnetserversubnetprefix')]"
+            }
+          },
+          {
+            "name": "AzureBastionSubnet",
+            "properties": {
+              "addressPrefix": "[parameters('onpremvnetbastionsubnetprefix')]"
+            }
+          },
+          {
+            "name": "GatewaySubnet",
+            "properties": {
+              "addressPrefix": "[parameters('onpremvnetgatewysubnetprefix')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2019-08-01",
+      "name": "[variables('onprembastionnsgname')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "bastion-in-allow",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationPortRange": 443,
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "bastion-control-in-allow",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "sourceAddressPrefix": "GatewayManager",
+              "destinationPortRanges": [
+                443,
+                4443
+              ],
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 120,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "bastion-in-deny",
+            "properties": {
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 4096,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "bastion-vnet-ssh-out-allow",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationPortRange": 22,
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "bastion-vnet-rdp-out-allow",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationPortRange": 3389,
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "bastion-azure-out-allow",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationPortRange": 443,
+              "destinationAddressPrefix": "AzureCloud",
+              "access": "Allow",
+              "priority": 120,
+              "direction": "Outbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/bastionHosts",
+      "apiVersion": "2020-05-01",
+      "name": "[variables('onprembastionname')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "IPConf",
+            "properties": {
+              "subnet": {
+                "id": "[variables('onprembastionsubnetref')]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('onprembastionipname'))]"
+              }
+            }
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('onprembastionipname'))]",
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('onpremvnetname'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2020-05-01",
+      "name": "[variables('onprembastionipname')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "Standard"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Static"
+      }
+    },
+    {
       "type": "Microsoft.Storage/storageAccounts",
       "apiVersion": "2019-06-01",
       "name": "[variables('storagename')]",
@@ -433,6 +788,73 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.Network/networkInterfaces', variables('nicname'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storagename'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "apiVersion": "2020-05-01",
+      "name": "[variables('onpremnicname')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('onpremvmsubnetref')]"
+              }
+            }
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('onpremvnetname'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "apiVersion": "2019-12-01",
+      "name": "[variables('onpremvmname')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmsize')]"
+        },
+        "osProfile": {
+          "computerName": "[variables('onpremvmname')]",
+          "adminUsername": "[parameters('adminusername')]",
+          "adminPassword": "[parameters('adminpassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "[parameters('windowsosversion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[variables('onpremdiskname')]",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('onpremnicname'))]"
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": true,
+            "storageUri": "[reference(resourceId('Microsoft.Storage/storageAccounts', variables('storagename'))).primaryEndpoints.blob]"
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('onpremnicname'))]",
         "[resourceId('Microsoft.Storage/storageAccounts', variables('storagename'))]"
       ]
     }
