@@ -116,6 +116,7 @@ var hubfirewallid = {
     }
 }
 var storagename = concat('vm01', uniqueString(resourceGroup().id))
+var loganalyticsname = concat('fwlogs', uniqueString(resourceGroup().id))
 
 /*Variables for spoke VNet and VM */
 var vnetname = 'spoke1-vnet'
@@ -243,6 +244,16 @@ resource policy 'Microsoft.Network/firewallPolicies@2020-05-01' = {
     }
 }
 
+resource loganalytics 'Microsoft.OperationalInsights/workspaces@2020-03-01-preview' = {
+    name: loganalyticsname
+    location: location
+    properties: {
+        sku: {
+            name: 'pergb2018'
+        }
+    }
+}
+
 resource firewall 'Microsoft.Network/azureFirewalls@2020-05-01' = {
     name: fwname
     location: location
@@ -264,6 +275,37 @@ resource firewall 'Microsoft.Network/azureFirewalls@2020-05-01' = {
         }             
     }
   } 
+
+  resource firewalldiag 'Microsoft.Network/azureFirewalls/providers/diagnosticSettings@2017-05-01-preview' = {
+    name: '${fwname}/Microsoft.Insights/diagnostics'
+    location: location
+    properties: {
+        workspaceId: loganalytics.id
+        logs: [
+            {
+                category: 'AzureFirewallApplicationRule'
+                enabled: true
+            }
+            {
+                category: 'AzureFirewallNetworkRule'
+                enabled: true
+            }
+            {
+                category: 'AzureFirewallDnsProxy'
+                enabled: true
+            }
+        ]
+        metrics: [
+            {
+                category: 'AllMetrics'
+                enabled: true
+            }
+        ]         
+    }
+    dependsOn: [
+        firewall
+    ]     
+}
 
   resource vnet 'Microsoft.Network/virtualNetworks@2020-05-01' = {
     name: vnetname

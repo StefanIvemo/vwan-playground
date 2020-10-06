@@ -138,6 +138,7 @@
       }
     },
     "storagename": "[concat('vm01', uniqueString(resourceGroup().id))]",
+    "loganalyticsname": "[concat('fwlogs', uniqueString(resourceGroup().id))]",
     "vnetname": "spoke1-vnet",
     "connectionname": "[format('{0}-spoke1-vnet-connection', parameters('nameprefix'))]",
     "bastionname": "[format('{0}-bastion', variables('vnetname'))]",
@@ -281,6 +282,17 @@
       }
     },
     {
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "apiVersion": "2020-03-01-preview",
+      "name": "[variables('loganalyticsname')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "sku": {
+          "name": "pergb2018"
+        }
+      }
+    },
+    {
       "type": "Microsoft.Network/azureFirewalls",
       "apiVersion": "2020-05-01",
       "name": "[variables('fwname')]",
@@ -305,6 +317,39 @@
       "dependsOn": [
         "[resourceId('Microsoft.Network/virtualHubs', variables('hubname'))]",
         "[resourceId('Microsoft.Network/firewallPolicies', variables('policyname'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/azureFirewalls/providers/diagnosticSettings",
+      "apiVersion": "2017-05-01-preview",
+      "name": "[format('{0}/Microsoft.Insights/diagnostics', variables('fwname'))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('loganalyticsname'))]",
+        "logs": [
+          {
+            "category": "AzureFirewallApplicationRule",
+            "enabled": true
+          },
+          {
+            "category": "AzureFirewallNetworkRule",
+            "enabled": true
+          },
+          {
+            "category": "AzureFirewallDnsProxy",
+            "enabled": true
+          }
+        ],
+        "metrics": [
+          {
+            "category": "AllMetrics",
+            "enabled": true
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/azureFirewalls', variables('fwname'))]",
+        "[resourceId('Microsoft.OperationalInsights/workspaces', variables('loganalyticsname'))]"
       ]
     },
     {
