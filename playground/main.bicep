@@ -125,6 +125,7 @@ var storagename = concat('vmlogs', uniqueString(resourceGroup().id))
 var spokevnetname = 'spoke1-vnet'
 var spokebastionname = '${spokevnetname}-bastion'
 var spokebastionnsgname = '${spokevnetname}-AzureBastionSubnet-nsg'
+var spokeservernsgname = '${spokevnetname}-snet-servers-nsg'
 var spokebastionipname = '${spokebastionname}-pip'
 var spokevmname = 'spoke1-vm01'
 var spokenicname =  '${spokevmname}-nic'
@@ -137,6 +138,7 @@ var spokebastionsubnetref = '${spokevnet.id}/subnets/AzureBastionSubnet'
 var onpremvnetname = 'onprem-vnet'
 var onprembastionname = '${onpremvnetname}-bastion'
 var onprembastionnsgname = '${onpremvnetname}-AzureBastionSubnet-nsg'
+var onpremservernsgname = '${onpremvnetname}-snet-servers-nsg'
 var onprembastionipname = '${onprembastionname}-pip'
 var onpremvmname = 'onprem-vm01'
 var onpremnicname =  '${onpremvmname}-nic'
@@ -325,13 +327,19 @@ resource spokevnet 'Microsoft.Network/virtualNetworks@2020-05-01' = {
             {
                 name: 'snet-servers'
                 properties: {
-                    addressPrefix: spokeserversubnetprefix                 
+                    addressPrefix: spokeserversubnetprefix   
+                    networkSecurityGroup: {
+                        id: spokeservernsg.id
+                    }              
                 }            
             }
             {
                 name: 'AzureBastionSubnet'
                 properties: {
-                    addressPrefix: spokebastionsubnetprefix                 
+                    addressPrefix: spokebastionsubnetprefix
+                    networkSecurityGroup: {
+                        id: spokebastionnsg.id
+                    }                 
                 }            
             }             
         ]
@@ -417,6 +425,14 @@ resource s2sconnection 'Microsoft.Network/connections@2020-05-01' = {
 
         
     }
+}
+
+resource spokeservernsg  'Microsoft.Network/networkSecurityGroups@2020-05-01' = {
+    name: spokeservernsgname
+    location: location
+    properties: {
+
+    }    
 }
 
 resource spokebastionnsg 'Microsoft.Network/networkSecurityGroups@2019-08-01' = {
@@ -553,13 +569,19 @@ resource onpremvnet 'Microsoft.Network/virtualNetworks@2020-05-01' = {
             {
                 name: 'snet-servers'
                 properties: {
-                    addressPrefix: onpremserversubnetprefix                 
+                    addressPrefix: onpremserversubnetprefix
+                    networkSecurityGroup: {
+                        id: onpremservernsg.id
+                    }                  
                 }            
             }
             {
                 name: 'AzureBastionSubnet'
                 properties: {
-                    addressPrefix: onprembastionsubnetprefix                 
+                    addressPrefix: onprembastionsubnetprefix
+                    networkSecurityGroup: {
+                        id: onprembastionnsg.id
+                    }                   
                 }            
             }
             {
@@ -570,6 +592,14 @@ resource onpremvnet 'Microsoft.Network/virtualNetworks@2020-05-01' = {
             }             
         ]
     }
+}
+
+resource onpremservernsg  'Microsoft.Network/networkSecurityGroups@2020-05-01' = {
+    name: onpremservernsgname
+    location: location
+    properties: {
+
+    }    
 }
 
 resource onprembastionnsg 'Microsoft.Network/networkSecurityGroups@2019-08-01' = {
@@ -718,56 +748,55 @@ resource spokenic 'Microsoft.Network/networkInterfaces@2020-05-01' = {
             }
           }
         ]
-      }
     }
+}
 
-    resource spokevm 'Microsoft.Compute/virtualMachines@2019-12-01' = {
-        name: spokevmname
-        location: location
-        properties: {
-          hardwareProfile: {
-              vmSize: vmsize
+resource spokevm 'Microsoft.Compute/virtualMachines@2019-12-01' = {
+    name: spokevmname
+    location: location
+    properties: {
+        hardwareProfile: {
+            vmSize: vmsize
+        }
+        osProfile: {
+            computerName: spokevmname
+            adminUsername: adminusername
+            adminPassword: adminpassword
+        }
+        storageProfile: {
+            imageReference: {
+            publisher: 'MicrosoftWindowsServer'
+            offer: 'WindowsServer'
+            sku: windowsosversion
+            version: 'latest'
             }
-            osProfile: {
-              computerName: spokevmname
-              adminUsername: adminusername
-              adminPassword: adminpassword
-            }
-            storageProfile: {
-              imageReference: {
-                publisher: 'MicrosoftWindowsServer'
-                offer: 'WindowsServer'
-                sku: windowsosversion
-                version: 'latest'
-              }
-              osDisk: {
+            osDisk: {
                 name: spokediskname
                 createOption: 'FromImage'
-              }              
-            }
-            networkProfile: {
-              networkInterfaces: [
+            }              
+        }
+        networkProfile: {
+            networkInterfaces: [
                 {
                   id: spokenic.id
                 }
-              ]
-            }
-            diagnosticsProfile: {
-              bootDiagnostics: {
+            ]
+        }
+        diagnosticsProfile: {
+            bootDiagnostics: {
                 enabled: true
                 storageUri: stg.properties.primaryEndpoints.blob
               }
-            }
         }
-      }
+    }
+}
 
-      resource onpremnic 'Microsoft.Network/networkInterfaces@2020-05-01' = {
-        name: onpremnicname
-        location: location
-    
-        properties: {
-            ipConfigurations: [
-              {
+resource onpremnic 'Microsoft.Network/networkInterfaces@2020-05-01' = {
+    name: onpremnicname
+    location: location    
+    properties: {
+        ipConfigurations: [
+            {
                 name: 'ipconfig1'
                 properties: {
                   privateIPAllocationMethod: 'Dynamic'
@@ -775,47 +804,100 @@ resource spokenic 'Microsoft.Network/networkInterfaces@2020-05-01' = {
                     id: onpremvmsubnetref
                   }
                 }
-              }
-            ]
-          }
-        }
-    
-        resource onpremvm 'Microsoft.Compute/virtualMachines@2019-12-01' = {
-            name: onpremvmname
-            location: location
-            properties: {
-              hardwareProfile: {
-                  vmSize: vmsize
-                }
-                osProfile: {
-                  computerName: onpremvmname
-                  adminUsername: adminusername
-                  adminPassword: adminpassword
-                }
-                storageProfile: {
-                  imageReference: {
-                    publisher: 'MicrosoftWindowsServer'
-                    offer: 'WindowsServer'
-                    sku: windowsosversion
-                    version: 'latest'
-                  }
-                  osDisk: {
-                    name: onpremdiskname
-                    createOption: 'FromImage'
-                  }              
-                }
-                networkProfile: {
-                  networkInterfaces: [
-                    {
-                      id: onpremnic.id
-                    }
-                  ]
-                }
-                diagnosticsProfile: {
-                  bootDiagnostics: {
-                    enabled: true
-                    storageUri: stg.properties.primaryEndpoints.blob
-                  }
-                }
             }
-          }   
+        ]
+    }
+}
+    
+resource onpremvm 'Microsoft.Compute/virtualMachines@2019-12-01' = {
+    name: onpremvmname
+    location: location
+    properties: {
+        hardwareProfile: {
+            vmSize: vmsize
+        }
+        osProfile: {
+            computerName: onpremvmname
+            adminUsername: adminusername
+            adminPassword: adminpassword
+        }
+        storageProfile: {
+            imageReference: {
+                publisher: 'MicrosoftWindowsServer'
+                offer: 'WindowsServer'
+                sku: windowsosversion
+                version: 'latest'
+            }
+            osDisk: {
+                name: onpremdiskname
+                createOption: 'FromImage'
+            }              
+        }
+        networkProfile: {
+            networkInterfaces: [
+                {
+                    id: onpremnic.id
+                }
+            ]
+        }
+        diagnosticsProfile: {
+            bootDiagnostics: {
+                enabled: true
+                storageUri: stg.properties.primaryEndpoints.blob
+            }
+        }
+    }
+}
+
+resource vnetroutetable 'Microsoft.Network/virtualHubs/routeTables@2020-05-01' = {
+    name: '${hubname}/VNetRouteTable'
+    location: location
+    properties: {
+        routes: [
+            {
+                destinationType: 'CIDR'
+                destinations: [
+                    onpremaddressprefix
+                    '0.0.0.0/0'
+                ]
+                nextHopType: 'IPAddress'
+                nextHops: [
+                    firewall.properties.ipConfigurations[0].properties.privateIPAddress
+                ]
+            }
+        ]
+        attachedConnections: [
+            'All_Vnets'
+        ]
+    }
+    dependsOn: [        
+        hubvpngw       
+    ] 
+}
+
+resource branchroutetable 'Microsoft.Network/virtualHubs/routeTables@2020-05-01' = {
+    name: '${hubname}/BranchRouteTable'
+    location: location
+    properties: {
+        routes: [
+            {
+                
+                destinationType: 'CIDR'
+                destinations: [
+                    spokeaddressprefix
+                ]
+                nextHopType: 'IPAddress'
+                nextHops: [
+                    firewall.properties.ipConfigurations[0].properties.privateIPAddress
+                ]
+            }
+        ]        
+        attachedConnections: [
+            'All_Branches'
+        ]
+    }
+    dependsOn: [        
+        hubvpngw
+        vnetroutetable       
+    ] 
+}

@@ -142,6 +142,7 @@
     "spokevnetname": "spoke1-vnet",
     "spokebastionname": "[format('{0}-bastion', variables('spokevnetname'))]",
     "spokebastionnsgname": "[format('{0}-AzureBastionSubnet-nsg', variables('spokevnetname'))]",
+    "spokeservernsgname": "[format('{0}-snet-servers-nsg', variables('spokevnetname'))]",
     "spokebastionipname": "[format('{0}-pip', variables('spokebastionname'))]",
     "spokevmname": "spoke1-vm01",
     "spokenicname": "[format('{0}-nic', variables('spokevmname'))]",
@@ -151,6 +152,7 @@
     "onpremvnetname": "onprem-vnet",
     "onprembastionname": "[format('{0}-bastion', variables('onpremvnetname'))]",
     "onprembastionnsgname": "[format('{0}-AzureBastionSubnet-nsg', variables('onpremvnetname'))]",
+    "onpremservernsgname": "[format('{0}-snet-servers-nsg', variables('onpremvnetname'))]",
     "onprembastionipname": "[format('{0}-pip', variables('onprembastionname'))]",
     "onpremvmname": "onprem-vm01",
     "onpremnicname": "[format('{0}-nic', variables('onpremvmname'))]",
@@ -366,17 +368,27 @@
           {
             "name": "snet-servers",
             "properties": {
-              "addressPrefix": "[parameters('spokeserversubnetprefix')]"
+              "addressPrefix": "[parameters('spokeserversubnetprefix')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('spokeservernsgname'))]"
+              }
             }
           },
           {
             "name": "AzureBastionSubnet",
             "properties": {
-              "addressPrefix": "[parameters('spokebastionsubnetprefix')]"
+              "addressPrefix": "[parameters('spokebastionsubnetprefix')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('spokebastionnsgname'))]"
+              }
             }
           }
         ]
-      }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('spokebastionnsgname'))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('spokeservernsgname'))]"
+      ]
     },
     {
       "type": "Microsoft.Network/publicIPAddresses",
@@ -471,6 +483,13 @@
         "[resourceId('Microsoft.Network/localNetworkGateways', 'onprem-hub-lgw')]",
         "[resourceId('Microsoft.Network/virtualNetworkGateways', variables('onpremvpngwname'))]"
       ]
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2020-05-01",
+      "name": "[variables('spokeservernsgname')]",
+      "location": "[parameters('location')]",
+      "properties": {}
     },
     {
       "type": "Microsoft.Network/networkSecurityGroups",
@@ -615,13 +634,19 @@
           {
             "name": "snet-servers",
             "properties": {
-              "addressPrefix": "[parameters('onpremserversubnetprefix')]"
+              "addressPrefix": "[parameters('onpremserversubnetprefix')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('onpremservernsgname'))]"
+              }
             }
           },
           {
             "name": "AzureBastionSubnet",
             "properties": {
-              "addressPrefix": "[parameters('onprembastionsubnetprefix')]"
+              "addressPrefix": "[parameters('onprembastionsubnetprefix')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('onprembastionnsgname'))]"
+              }
             }
           },
           {
@@ -631,7 +656,18 @@
             }
           }
         ]
-      }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('onprembastionnsgname'))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('onpremservernsgname'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2020-05-01",
+      "name": "[variables('onpremservernsgname')]",
+      "location": "[parameters('location')]",
+      "properties": {}
     },
     {
       "type": "Microsoft.Network/networkSecurityGroups",
@@ -903,6 +939,62 @@
       "dependsOn": [
         "[resourceId('Microsoft.Network/networkInterfaces', variables('onpremnicname'))]",
         "[resourceId('Microsoft.Storage/storageAccounts', variables('storagename'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/virtualHubs/routeTables",
+      "apiVersion": "2020-05-01",
+      "name": "[format('{0}/VNetRouteTable', variables('hubname'))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "routes": [
+          {
+            "destinationType": "CIDR",
+            "destinations": [
+              "[parameters('onpremaddressprefix')]",
+              "0.0.0.0/0"
+            ],
+            "nextHopType": "IPAddress",
+            "nextHops": [
+              "[reference(resourceId('Microsoft.Network/azureFirewalls', variables('fwname'))).ipConfigurations[0].properties.privateIPAddress]"
+            ]
+          }
+        ],
+        "attachedConnections": [
+          "All_Vnets"
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/azureFirewalls', variables('fwname'))]",
+        "[resourceId('Microsoft.Network/vpnGateways', variables('hubvpngwname'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/virtualHubs/routeTables",
+      "apiVersion": "2020-05-01",
+      "name": "[format('{0}/BranchRouteTable', variables('hubname'))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "routes": [
+          {
+            "destinationType": "CIDR",
+            "destinations": [
+              "[parameters('spokeaddressprefix')]"
+            ],
+            "nextHopType": "IPAddress",
+            "nextHops": [
+              "[reference(resourceId('Microsoft.Network/azureFirewalls', variables('fwname'))).ipConfigurations[0].properties.privateIPAddress]"
+            ]
+          }
+        ],
+        "attachedConnections": [
+          "All_Branches"
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/azureFirewalls', variables('fwname'))]",
+        "[resourceId('Microsoft.Network/vpnGateways', variables('hubvpngwname'))]",
+        "[resourceId('Microsoft.Network/virtualHubs/routeTables', split(format('{0}/VNetRouteTable', variables('hubname')), '/')[0], split(format('{0}/VNetRouteTable', variables('hubname')), '/')[1])]"
       ]
     }
   ],
