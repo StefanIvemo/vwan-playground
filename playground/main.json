@@ -435,7 +435,10 @@
       "location": "[parameters('location')]",
       "properties": {
         "localNetworkAddressSpace": {
-          "AddressPrefixes": ""
+          "AddressPrefixes": [
+            "[parameters('spokeaddressprefix')]",
+            "[parameters('hubaddressprefix')]"
+          ]
         },
         "gatewayIpAddress": "[reference(resourceId('Microsoft.Network/vpnGateways', variables('hubvpngwname'))).ipConfigurations[0].publicIpAddress]",
         "bgpSettings": {

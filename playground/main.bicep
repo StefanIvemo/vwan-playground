@@ -387,7 +387,10 @@ resource localnetworkgw 'Microsoft.Network/localNetworkGateways@2020-05-01' = {
     location: location    
     properties: {
         localNetworkAddressSpace:{
-            AddressPrefixes: ''
+            AddressPrefixes: [
+                spokeaddressprefix
+                hubaddressprefix
+            ]
         }
         gatewayIpAddress: hubvpngw.properties.ipConfigurations[0].publicIpAddress
         bgpSettings: {
