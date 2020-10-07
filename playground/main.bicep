@@ -862,7 +862,7 @@ resource vnetroutetable 'Microsoft.Network/virtualHubs/routeTables@2020-05-01' =
                 ]
                 nextHopType: 'IPAddress'
                 nextHops: [
-                    firewall.properties.ipConfigurations[0].properties.privateIPAddress
+                    '10.0.0.68'
                 ]
             }
         ]
@@ -888,7 +888,7 @@ resource branchroutetable 'Microsoft.Network/virtualHubs/routeTables@2020-05-01'
                 ]
                 nextHopType: 'IPAddress'
                 nextHops: [
-                    firewall.properties.ipConfigurations[0].properties.privateIPAddress
+                    '10.0.0.68'
                 ]
             }
         ]        

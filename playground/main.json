@@ -956,7 +956,7 @@
             ],
             "nextHopType": "IPAddress",
             "nextHops": [
-              "[reference(resourceId('Microsoft.Network/azureFirewalls', variables('fwname'))).ipConfigurations[0].properties.privateIPAddress]"
+              "10.0.0.68"
             ]
           }
         ],
@@ -965,7 +965,6 @@
         ]
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Network/azureFirewalls', variables('fwname'))]",
         "[resourceId('Microsoft.Network/vpnGateways', variables('hubvpngwname'))]"
       ]
     },
@@ -983,7 +982,7 @@
             ],
             "nextHopType": "IPAddress",
             "nextHops": [
-              "[reference(resourceId('Microsoft.Network/azureFirewalls', variables('fwname'))).ipConfigurations[0].properties.privateIPAddress]"
+              "10.0.0.68"
             ]
           }
         ],
@@ -992,7 +991,6 @@
         ]
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Network/azureFirewalls', variables('fwname'))]",
         "[resourceId('Microsoft.Network/vpnGateways', variables('hubvpngwname'))]",
         "[resourceId('Microsoft.Network/virtualHubs/routeTables', split(format('{0}/VNetRouteTable', variables('hubname')), '/')[0], split(format('{0}/VNetRouteTable', variables('hubname')), '/')[1])]"
       ]
