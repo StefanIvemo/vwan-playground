@@ -5,7 +5,7 @@ Welcome to the Azure Virtual WAN Playground repository! Your one-stop shop for a
 This repo is dedicated for all poor souls out there who want to play around with Azure Virtual WAN but don't have unlimited Azure Credit in their subscriptions. I've put together a template that deploys Azure Virtual WAN and all resources needed to play around with the service and test everything from VPN, Routing, Secured Virtual Hub, Virtual Network connections and more. The goal is to make it easy to spin up an environment when you need to test a feature for a short period of time and then remove it all when finished.
 
 ## How it's built
-The Azure Virtual WAN Playground is built using 💪Bicep language which makes it so much easier to work with and read compared to ARM Templates. Azure Virtual WAN with all it's dependencies between the hub and the connected services like VPN Gateway, Firewall (Secured Virtual WAN), VPN Site makes it hard to follow in pure ARM template. If you haven't tested Bicep yet check out the [Bicep repository](https://github.com/Azure/bicep) for all info needed, I guarantee you're going to love it! 
+The Azure Virtual WAN Playground is built using 💪Bicep language which makes it so much easier to work with and read compared to ARM Templates. Azure Virtual WAN with all it's dependencies between the hub and the connected services like VPN Gateway, Firewall (Secured Virtual WAN), VPN Site makes it hard to follow in pure ARM template. If you haven't tested Bicep yet check out the [Bicep repository](https://github.com/Azure/bicep) for all info needed, I guarantee you're going to love it!
 
 ## Deployment
 Deploy the solution using the PowerShell `Az` deployment cmdlets or `az cli` deployment commands and the compiled `main.json` template.
