@@ -20,61 +20,55 @@ param wantype string {
       description: 'Specifies the type of Virtual WAN.'
     }
 }
-param wanaddressprefix string {
+param hubaddressprefix string {
     default: '10.0.0.0/24'
     metadata: {
       description: 'Specifies the Virtual Hub Address Prefix.'
     }
 }
 param fwpublicipcount int {
-    default: 1
+    default: 2
     metadata: {
       description: 'Specify the amount of public IPs for the FIrewall'
     }
 }
-param firewallid string {
-    default: ''
-    metadata: {
-      description: 'Specify the firewall resource ID when running the template to update the Virtual WAN, leave blank for first time deployment'
-    }
-}
-param vnetaddressprefix string {
+param spokeaddressprefix string {
     default: '10.0.1.0/24'
     metadata: {
       description: 'Specify the address prefix to use for the spoke VNet'
     }
 }
-param vnetserversubnetprefix string {
+param spokeserversubnetprefix string {
     default: '10.0.1.0/26'
     metadata: {
       description: 'Specify the address prefix to use for server subnet in the spoke VNet'
     }
 }
-param vnetbastionsubnetprefix string {
+param spokebastionsubnetprefix string {
     default: '10.0.1.64/26'
     metadata: {
       description: 'Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet'
     }
 }
-param onpremvnetaddressprefix string {
+param onpremaddressprefix string {
     default: '10.20.0.0/24'
     metadata: {
       description: 'Specify the address prefix to use for the spoke VNet'
     }
 }
-param onpremvnetserversubnetprefix string {
+param onpremserversubnetprefix string {
     default: '10.20.0.0/26'
     metadata: {
       description: 'Specify the address prefix to use for server subnet in the spoke VNet'
     }
 }
-param onpremvnetbastionsubnetprefix string {
+param onprembastionsubnetprefix string {
     default: '10.20.0.64/26'
     metadata: {
       description: 'Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet'
     }
 }
-param onpremvnetgatewysubnetprefix string {
+param onpremvpngatewysubnetprefix string {
     default: '10.20.0.128/26'
     metadata: {
       description: 'Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet'
@@ -82,10 +76,22 @@ param onpremvnetgatewysubnetprefix string {
 }
 param psk string {
     secure:true
+    metadata: {
+        'description': 'PSK to use for the site to site tunnel between Virtual Hub and On-Prem VNet' 
+    }
 }
-param adminusername string
+param adminusername string {
+    default :'sysadmin'
+    metadata: {
+        'description': 'The local admin user name for the deployed servers' 
+    }
+}
+
 param adminpassword string {
     secure:true
+    metadata: {
+        'description': 'The local admin password' 
+    }
 }
 param windowsosversion string {
     default :'2019-Datacenter'
@@ -109,26 +115,23 @@ var wanname = '${nameprefix}-vwan'
 var hubname = '${nameprefix}-vhub-${location}'
 var fwname = '${nameprefix}-fw-${location}'
 var hubvpngwname = '${nameprefix}-vhub-${location}-vpngw'
-var policyname = '${fwname}-policy'
-var hubfirewallid = {
-    azureFirewall: {
-        id: firewallid
-    }
-}
-var storagename = concat('vm01', uniqueString(resourceGroup().id))
+var fwpolicyname = '${fwname}-policy'
+var onpremvpnsitename = 'onprem-vpnsite'
+var spokeconnectionname = '${nameprefix}-spoke1-vnet-connection'
 var loganalyticsname = concat('fwlogs', uniqueString(resourceGroup().id))
+var storagename = concat('vmlogs', uniqueString(resourceGroup().id))
 
 /*Variables for spoke VNet and VM */
-var vnetname = 'spoke1-vnet'
-var connectionname = '${nameprefix}-spoke1-vnet-connection'
-var bastionname = '${vnetname}-bastion'
-var bastionnsgname = '${vnetname}-AzureBastionSubnet-nsg'
-var bastionipname = '${bastionname}-pip'
-var vmname = 'spoke1-vm01'
-var nicname =  '${vmname}-nic'
-var diskname =  '${vmname}-OSDisk'
-var vmsubnetref = '${vnet.id}/subnets/snet-servers'
-var bastionsubnetref = '${vnet.id}/subnets/AzureBastionSubnet'
+var spokevnetname = 'spoke1-vnet'
+var spokebastionname = '${spokevnetname}-bastion'
+var spokebastionnsgname = '${spokevnetname}-AzureBastionSubnet-nsg'
+var spokebastionipname = '${spokebastionname}-pip'
+var spokevmname = 'spoke1-vm01'
+var spokenicname =  '${spokevmname}-nic'
+var spokediskname =  '${spokevmname}-OSDisk'
+var spokevmsubnetref = '${spokevnet.id}/subnets/snet-servers'
+var spokebastionsubnetref = '${spokevnet.id}/subnets/AzureBastionSubnet'
+
 
 /*Variables for "On-Prem" VNet and VM */
 var onpremvnetname = 'onprem-vnet'
@@ -140,7 +143,6 @@ var onpremnicname =  '${onpremvmname}-nic'
 var onpremdiskname =  '${onpremvmname}-OSDisk'
 var onpremvmsubnetref = '${onpremvnet.id}/subnets/snet-servers'
 var onprembastionsubnetref = '${onpremvnet.id}/subnets/AzureBastionSubnet'
-var onpremvpnsitename = 'onprem-vpnsite'
 var onpremvpngwname = '${onpremvnetname}-vpn-vgw'
 var onpremvpngwpipname = '${onpremvpngwname}-pip'
 var onpremvpngwsubnetref = '${onpremvnet.id}/subnets/GatewaySubnet'
@@ -161,19 +163,18 @@ resource hub 'Microsoft.Network/virtualHubs@2020-05-01' = {
     name: hubname
     location: location
     properties: {        
-        addressPrefix: wanaddressprefix
+        addressPrefix: hubaddressprefix
         virtualWan: {
             id: wan.id
-        }
-        azureFirewall:  empty(firewallid) ? json('null') : hubfirewallid.azureFirewall        
+        }      
     }    
 }
 
 resource connection 'Microsoft.Network/virtualHubs/hubVirtualNetworkConnections@2020-05-01' = {
-    name: '${hubname}/${connectionname}'
+    name: '${hubname}/${spokeconnectionname}'
     properties: {
         remoteVirtualNetwork :{
-            id: vnet.id
+            id: spokevnet.id
         }
         allowHubToRemoteVnetTransit: true
         allowRemoteVnetToUseHubVnetGateways: true
@@ -190,7 +191,7 @@ resource onpremvpnsite 'Microsoft.Network/vpnSites@2020-05-01' = {
     location: location
     properties: {
         addressSpace :{
-            addressPrefixes: onpremvnetaddressprefix
+            addressPrefixes: onpremaddressprefix
         }
         bgpProperties: {
             asn: 65010
@@ -234,7 +235,7 @@ resource hubvpngw 'Microsoft.Network/vpnGateways@2020-05-01' = {
 }
 
 resource policy 'Microsoft.Network/firewallPolicies@2020-05-01' = {
-    name: policyname
+    name: fwpolicyname
     location: location
     properties: {
         threatIntelMode: 'Alert'
@@ -307,26 +308,26 @@ resource firewall 'Microsoft.Network/azureFirewalls@2020-05-01' = {
     ]     
 }
 
-  resource vnet 'Microsoft.Network/virtualNetworks@2020-05-01' = {
-    name: vnetname
+resource spokevnet 'Microsoft.Network/virtualNetworks@2020-05-01' = {
+    name: spokevnetname
     location: location
     properties: {
         addressSpace: {
             addressPrefixes: [
-                vnetaddressprefix
+                spokeaddressprefix
             ]
         }
         subnets: [
             {
                 name: 'snet-servers'
                 properties: {
-                    addressPrefix: vnetserversubnetprefix                 
+                    addressPrefix: spokeserversubnetprefix                 
                 }            
             }
             {
                 name: 'AzureBastionSubnet'
                 properties: {
-                    addressPrefix: vnetbastionsubnetprefix                 
+                    addressPrefix: spokebastionsubnetprefix                 
                 }            
             }             
         ]
@@ -411,10 +412,8 @@ resource s2sconnection 'Microsoft.Network/connections@2020-05-01' = {
     }
 }
 
-
-
-resource bastionnsg 'Microsoft.Network/networkSecurityGroups@2019-08-01' = {
-    name: bastionnsgname
+resource spokebastionnsg 'Microsoft.Network/networkSecurityGroups@2019-08-01' = {
+    name: spokebastionnsgname
     location: location
     properties: {
         securityRules: [
@@ -503,8 +502,8 @@ resource bastionnsg 'Microsoft.Network/networkSecurityGroups@2019-08-01' = {
     }
   }
 
-resource bastion 'Microsoft.Network/bastionHosts@2020-05-01' = {
-    name: bastionname  
+resource spokebastion 'Microsoft.Network/bastionHosts@2020-05-01' = {
+    name: spokebastionname  
     location: location  
     properties: {
         ipConfigurations: [
@@ -512,10 +511,10 @@ resource bastion 'Microsoft.Network/bastionHosts@2020-05-01' = {
                 name: 'IPConf'
                 properties: {
                     subnet: {
-                        id: bastionsubnetref
+                        id: spokebastionsubnetref
                     }
                     publicIPAddress: {
-                        id: bastionip.id
+                        id: spokebastionip.id
                     }
                 }
             }
@@ -523,8 +522,8 @@ resource bastion 'Microsoft.Network/bastionHosts@2020-05-01' = {
     }
 }
 
-resource bastionip 'Microsoft.Network/publicIPAddresses@2020-05-01' = {
-    name: bastionipname
+resource spokebastionip 'Microsoft.Network/publicIPAddresses@2020-05-01' = {
+    name: spokebastionipname
     location: location
     sku: {
       name: 'Standard'
@@ -540,26 +539,26 @@ resource onpremvnet 'Microsoft.Network/virtualNetworks@2020-05-01' = {
     properties: {
         addressSpace: {
             addressPrefixes: [
-                onpremvnetaddressprefix
+                onpremaddressprefix
             ]
         }
         subnets: [
             {
                 name: 'snet-servers'
                 properties: {
-                    addressPrefix: onpremvnetserversubnetprefix                 
+                    addressPrefix: onpremserversubnetprefix                 
                 }            
             }
             {
                 name: 'AzureBastionSubnet'
                 properties: {
-                    addressPrefix: onpremvnetbastionsubnetprefix                 
+                    addressPrefix: onprembastionsubnetprefix                 
                 }            
             }
             {
                 name: 'GatewaySubnet'
                 properties: {
-                    addressPrefix: onpremvnetgatewysubnetprefix                 
+                    addressPrefix: onpremvpngatewysubnetprefix                 
                 }            
             }             
         ]
@@ -696,8 +695,8 @@ resource stg  'Microsoft.Storage/storageAccounts@2019-06-01' = {
     kind: 'Storage'
 }
 
-resource nic 'Microsoft.Network/networkInterfaces@2020-05-01' = {
-    name: nicname
+resource spokenic 'Microsoft.Network/networkInterfaces@2020-05-01' = {
+    name: spokenicname
     location: location
 
     properties: {
@@ -707,7 +706,7 @@ resource nic 'Microsoft.Network/networkInterfaces@2020-05-01' = {
             properties: {
               privateIPAllocationMethod: 'Dynamic'
               subnet: {
-                id: vmsubnetref
+                id: spokevmsubnetref
               }
             }
           }
@@ -715,15 +714,15 @@ resource nic 'Microsoft.Network/networkInterfaces@2020-05-01' = {
       }
     }
 
-    resource vm 'Microsoft.Compute/virtualMachines@2019-12-01' = {
-        name: vmname
+    resource spokevm 'Microsoft.Compute/virtualMachines@2019-12-01' = {
+        name: spokevmname
         location: location
         properties: {
           hardwareProfile: {
               vmSize: vmsize
             }
             osProfile: {
-              computerName: vmname
+              computerName: spokevmname
               adminUsername: adminusername
               adminPassword: adminpassword
             }
@@ -735,14 +734,14 @@ resource nic 'Microsoft.Network/networkInterfaces@2020-05-01' = {
                 version: 'latest'
               }
               osDisk: {
-                name: diskname
+                name: spokediskname
                 createOption: 'FromImage'
               }              
             }
             networkProfile: {
               networkInterfaces: [
                 {
-                  id: nic.id
+                  id: spokenic.id
                 }
               ]
             }

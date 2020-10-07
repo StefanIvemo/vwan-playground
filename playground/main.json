@@ -27,7 +27,7 @@
         "Basic"
       ]
     },
-    "wanaddressprefix": {
+    "hubaddressprefix": {
       "type": "string",
       "metadata": {
         "description": "Specifies the Virtual Hub Address Prefix."
@@ -39,58 +39,51 @@
       "metadata": {
         "description": "Specify the amount of public IPs for the FIrewall"
       },
-      "defaultValue": 1
+      "defaultValue": 2
     },
-    "firewallid": {
-      "type": "string",
-      "metadata": {
-        "description": "Specify the firewall resource ID when running the template to update the Virtual WAN, leave blank for first time deployment"
-      },
-      "defaultValue": ""
-    },
-    "vnetaddressprefix": {
+    "spokeaddressprefix": {
       "type": "string",
       "metadata": {
         "description": "Specify the address prefix to use for the spoke VNet"
       },
       "defaultValue": "10.0.1.0/24"
     },
-    "vnetserversubnetprefix": {
+    "spokeserversubnetprefix": {
       "type": "string",
       "metadata": {
         "description": "Specify the address prefix to use for server subnet in the spoke VNet"
       },
       "defaultValue": "10.0.1.0/26"
     },
-    "vnetbastionsubnetprefix": {
+    "spokebastionsubnetprefix": {
       "type": "string",
       "metadata": {
         "description": "Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet"
       },
       "defaultValue": "10.0.1.64/26"
     },
-    "onpremvnetaddressprefix": {
+    "onpremaddressprefix": {
       "type": "string",
       "metadata": {
         "description": "Specify the address prefix to use for the spoke VNet"
       },
       "defaultValue": "10.20.0.0/24"
     },
-    "onpremvnetserversubnetprefix": {
+    "onpremserversubnetprefix": {
       "type": "string",
       "metadata": {
         "description": "Specify the address prefix to use for server subnet in the spoke VNet"
       },
       "defaultValue": "10.20.0.0/26"
     },
-    "onpremvnetbastionsubnetprefix": {
+    "onprembastionsubnetprefix": {
       "type": "string",
       "metadata": {
         "description": "Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet"
       },
       "defaultValue": "10.20.0.64/26"
     },
-    "onpremvnetgatewysubnetprefix": {
+    "onpremvpngatewysubnetprefix": {
       "type": "string",
       "metadata": {
         "description": "Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet"
@@ -98,13 +91,23 @@
       "defaultValue": "10.20.0.128/26"
     },
     "psk": {
-      "type": "secureString"
+      "type": "secureString",
+      "metadata": {
+        "description": "PSK to use for the site to site tunnel between Virtual Hub and On-Prem VNet"
+      }
     },
     "adminusername": {
-      "type": "string"
+      "type": "string",
+      "metadata": {
+        "description": "The local admin user name for the deployed servers"
+      },
+      "defaultValue": "sysadmin"
     },
     "adminpassword": {
-      "type": "secureString"
+      "type": "secureString",
+      "metadata": {
+        "description": "The local admin password"
+      }
     },
     "windowsosversion": {
       "type": "string",
@@ -131,24 +134,20 @@
     "hubname": "[format('{0}-vhub-{1}', parameters('nameprefix'), parameters('location'))]",
     "fwname": "[format('{0}-fw-{1}', parameters('nameprefix'), parameters('location'))]",
     "hubvpngwname": "[format('{0}-vhub-{1}-vpngw', parameters('nameprefix'), parameters('location'))]",
-    "policyname": "[format('{0}-policy', variables('fwname'))]",
-    "hubfirewallid": {
-      "azureFirewall": {
-        "id": "[parameters('firewallid')]"
-      }
-    },
-    "storagename": "[concat('vm01', uniqueString(resourceGroup().id))]",
+    "fwpolicyname": "[format('{0}-policy', variables('fwname'))]",
+    "onpremvpnsitename": "onprem-vpnsite",
+    "spokeconnectionname": "[format('{0}-spoke1-vnet-connection', parameters('nameprefix'))]",
     "loganalyticsname": "[concat('fwlogs', uniqueString(resourceGroup().id))]",
-    "vnetname": "spoke1-vnet",
-    "connectionname": "[format('{0}-spoke1-vnet-connection', parameters('nameprefix'))]",
-    "bastionname": "[format('{0}-bastion', variables('vnetname'))]",
-    "bastionnsgname": "[format('{0}-AzureBastionSubnet-nsg', variables('vnetname'))]",
-    "bastionipname": "[format('{0}-pip', variables('bastionname'))]",
-    "vmname": "spoke1-vm01",
-    "nicname": "[format('{0}-nic', variables('vmname'))]",
-    "diskname": "[format('{0}-OSDisk', variables('vmname'))]",
-    "vmsubnetref": "[format('{0}/subnets/snet-servers', resourceId('Microsoft.Network/virtualNetworks', variables('vnetname')))]",
-    "bastionsubnetref": "[format('{0}/subnets/AzureBastionSubnet', resourceId('Microsoft.Network/virtualNetworks', variables('vnetname')))]",
+    "storagename": "[concat('vmlogs', uniqueString(resourceGroup().id))]",
+    "spokevnetname": "spoke1-vnet",
+    "spokebastionname": "[format('{0}-bastion', variables('spokevnetname'))]",
+    "spokebastionnsgname": "[format('{0}-AzureBastionSubnet-nsg', variables('spokevnetname'))]",
+    "spokebastionipname": "[format('{0}-pip', variables('spokebastionname'))]",
+    "spokevmname": "spoke1-vm01",
+    "spokenicname": "[format('{0}-nic', variables('spokevmname'))]",
+    "spokediskname": "[format('{0}-OSDisk', variables('spokevmname'))]",
+    "spokevmsubnetref": "[format('{0}/subnets/snet-servers', resourceId('Microsoft.Network/virtualNetworks', variables('spokevnetname')))]",
+    "spokebastionsubnetref": "[format('{0}/subnets/AzureBastionSubnet', resourceId('Microsoft.Network/virtualNetworks', variables('spokevnetname')))]",
     "onpremvnetname": "onprem-vnet",
     "onprembastionname": "[format('{0}-bastion', variables('onpremvnetname'))]",
     "onprembastionnsgname": "[format('{0}-AzureBastionSubnet-nsg', variables('onpremvnetname'))]",
@@ -158,7 +157,6 @@
     "onpremdiskname": "[format('{0}-OSDisk', variables('onpremvmname'))]",
     "onpremvmsubnetref": "[format('{0}/subnets/snet-servers', resourceId('Microsoft.Network/virtualNetworks', variables('onpremvnetname')))]",
     "onprembastionsubnetref": "[format('{0}/subnets/AzureBastionSubnet', resourceId('Microsoft.Network/virtualNetworks', variables('onpremvnetname')))]",
-    "onpremvpnsitename": "onprem-vpnsite",
     "onpremvpngwname": "[format('{0}-vpn-vgw', variables('onpremvnetname'))]",
     "onpremvpngwpipname": "[format('{0}-pip', variables('onpremvpngwname'))]",
     "onpremvpngwsubnetref": "[format('{0}/subnets/GatewaySubnet', resourceId('Microsoft.Network/virtualNetworks', variables('onpremvnetname')))]"
@@ -182,11 +180,10 @@
       "name": "[variables('hubname')]",
       "location": "[parameters('location')]",
       "properties": {
-        "addressPrefix": "[parameters('wanaddressprefix')]",
+        "addressPrefix": "[parameters('hubaddressprefix')]",
         "virtualWan": {
           "id": "[resourceId('Microsoft.Network/virtualWans', variables('wanname'))]"
-        },
-        "azureFirewall": "[if(empty(parameters('firewallid')), json('null'), variables('hubfirewallid').azureFirewall)]"
+        }
       },
       "dependsOn": [
         "[resourceId('Microsoft.Network/virtualWans', variables('wanname'))]"
@@ -195,10 +192,10 @@
     {
       "type": "Microsoft.Network/virtualHubs/hubVirtualNetworkConnections",
       "apiVersion": "2020-05-01",
-      "name": "[format('{0}/{1}', variables('hubname'), variables('connectionname'))]",
+      "name": "[format('{0}/{1}', variables('hubname'), variables('spokeconnectionname'))]",
       "properties": {
         "remoteVirtualNetwork": {
-          "id": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetname'))]"
+          "id": "[resourceId('Microsoft.Network/virtualNetworks', variables('spokevnetname'))]"
         },
         "allowHubToRemoteVnetTransit": true,
         "allowRemoteVnetToUseHubVnetGateways": true,
@@ -207,7 +204,7 @@
       "dependsOn": [
         "[resourceId('Microsoft.Network/azureFirewalls', variables('fwname'))]",
         "[resourceId('Microsoft.Network/virtualHubs', variables('hubname'))]",
-        "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetname'))]"
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('spokevnetname'))]"
       ]
     },
     {
@@ -217,7 +214,7 @@
       "location": "[parameters('location')]",
       "properties": {
         "addressSpace": {
-          "addressPrefixes": "[parameters('onpremvnetaddressprefix')]"
+          "addressPrefixes": "[parameters('onpremaddressprefix')]"
         },
         "bgpProperties": {
           "asn": 65010,
@@ -272,7 +269,7 @@
     {
       "type": "Microsoft.Network/firewallPolicies",
       "apiVersion": "2020-05-01",
-      "name": "[variables('policyname')]",
+      "name": "[variables('fwpolicyname')]",
       "location": "[parameters('location')]",
       "properties": {
         "threatIntelMode": "Alert",
@@ -311,12 +308,12 @@
           }
         },
         "firewallPolicy": {
-          "id": "[resourceId('Microsoft.Network/firewallPolicies', variables('policyname'))]"
+          "id": "[resourceId('Microsoft.Network/firewallPolicies', variables('fwpolicyname'))]"
         }
       },
       "dependsOn": [
         "[resourceId('Microsoft.Network/virtualHubs', variables('hubname'))]",
-        "[resourceId('Microsoft.Network/firewallPolicies', variables('policyname'))]"
+        "[resourceId('Microsoft.Network/firewallPolicies', variables('fwpolicyname'))]"
       ]
     },
     {
@@ -355,25 +352,25 @@
     {
       "type": "Microsoft.Network/virtualNetworks",
       "apiVersion": "2020-05-01",
-      "name": "[variables('vnetname')]",
+      "name": "[variables('spokevnetname')]",
       "location": "[parameters('location')]",
       "properties": {
         "addressSpace": {
           "addressPrefixes": [
-            "[parameters('vnetaddressprefix')]"
+            "[parameters('spokeaddressprefix')]"
           ]
         },
         "subnets": [
           {
             "name": "snet-servers",
             "properties": {
-              "addressPrefix": "[parameters('vnetserversubnetprefix')]"
+              "addressPrefix": "[parameters('spokeserversubnetprefix')]"
             }
           },
           {
             "name": "AzureBastionSubnet",
             "properties": {
-              "addressPrefix": "[parameters('vnetbastionsubnetprefix')]"
+              "addressPrefix": "[parameters('spokebastionsubnetprefix')]"
             }
           }
         ]
@@ -473,7 +470,7 @@
     {
       "type": "Microsoft.Network/networkSecurityGroups",
       "apiVersion": "2019-08-01",
-      "name": "[variables('bastionnsgname')]",
+      "name": "[variables('spokebastionnsgname')]",
       "location": "[parameters('location')]",
       "properties": {
         "securityRules": [
@@ -564,7 +561,7 @@
     {
       "type": "Microsoft.Network/bastionHosts",
       "apiVersion": "2020-05-01",
-      "name": "[variables('bastionname')]",
+      "name": "[variables('spokebastionname')]",
       "location": "[parameters('location')]",
       "properties": {
         "ipConfigurations": [
@@ -572,24 +569,24 @@
             "name": "IPConf",
             "properties": {
               "subnet": {
-                "id": "[variables('bastionsubnetref')]"
+                "id": "[variables('spokebastionsubnetref')]"
               },
               "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('bastionipname'))]"
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('spokebastionipname'))]"
               }
             }
           }
         ]
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Network/publicIPAddresses', variables('bastionipname'))]",
-        "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetname'))]"
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('spokebastionipname'))]",
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('spokevnetname'))]"
       ]
     },
     {
       "type": "Microsoft.Network/publicIPAddresses",
       "apiVersion": "2020-05-01",
-      "name": "[variables('bastionipname')]",
+      "name": "[variables('spokebastionipname')]",
       "location": "[parameters('location')]",
       "sku": {
         "name": "Standard"
@@ -606,26 +603,26 @@
       "properties": {
         "addressSpace": {
           "addressPrefixes": [
-            "[parameters('onpremvnetaddressprefix')]"
+            "[parameters('onpremaddressprefix')]"
           ]
         },
         "subnets": [
           {
             "name": "snet-servers",
             "properties": {
-              "addressPrefix": "[parameters('onpremvnetserversubnetprefix')]"
+              "addressPrefix": "[parameters('onpremserversubnetprefix')]"
             }
           },
           {
             "name": "AzureBastionSubnet",
             "properties": {
-              "addressPrefix": "[parameters('onpremvnetbastionsubnetprefix')]"
+              "addressPrefix": "[parameters('onprembastionsubnetprefix')]"
             }
           },
           {
             "name": "GatewaySubnet",
             "properties": {
-              "addressPrefix": "[parameters('onpremvnetgatewysubnetprefix')]"
+              "addressPrefix": "[parameters('onpremvpngatewysubnetprefix')]"
             }
           }
         ]
@@ -772,7 +769,7 @@
     {
       "type": "Microsoft.Network/networkInterfaces",
       "apiVersion": "2020-05-01",
-      "name": "[variables('nicname')]",
+      "name": "[variables('spokenicname')]",
       "location": "[parameters('location')]",
       "properties": {
         "ipConfigurations": [
@@ -781,27 +778,27 @@
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
               "subnet": {
-                "id": "[variables('vmsubnetref')]"
+                "id": "[variables('spokevmsubnetref')]"
               }
             }
           }
         ]
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetname'))]"
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('spokevnetname'))]"
       ]
     },
     {
       "type": "Microsoft.Compute/virtualMachines",
       "apiVersion": "2019-12-01",
-      "name": "[variables('vmname')]",
+      "name": "[variables('spokevmname')]",
       "location": "[parameters('location')]",
       "properties": {
         "hardwareProfile": {
           "vmSize": "[parameters('vmsize')]"
         },
         "osProfile": {
-          "computerName": "[variables('vmname')]",
+          "computerName": "[variables('spokevmname')]",
           "adminUsername": "[parameters('adminusername')]",
           "adminPassword": "[parameters('adminpassword')]"
         },
@@ -813,14 +810,14 @@
             "version": "latest"
           },
           "osDisk": {
-            "name": "[variables('diskname')]",
+            "name": "[variables('spokediskname')]",
             "createOption": "FromImage"
           }
         },
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicname'))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('spokenicname'))]"
             }
           ]
         },
@@ -832,7 +829,7 @@
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Network/networkInterfaces', variables('nicname'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('spokenicname'))]",
         "[resourceId('Microsoft.Storage/storageAccounts', variables('storagename'))]"
       ]
     },
