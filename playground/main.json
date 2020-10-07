@@ -262,6 +262,8 @@
         }
       },
       "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualHubs/hubVirtualNetworkConnections', split(format('{0}/{1}', variables('hubname'), variables('spokeconnectionname')), '/')[0], split(format('{0}/{1}', variables('hubname'), variables('spokeconnectionname')), '/')[1])]",
+        "[resourceId('Microsoft.Network/azureFirewalls', variables('fwname'))]",
         "[resourceId('Microsoft.Network/virtualHubs', variables('hubname'))]",
         "[resourceId('Microsoft.Network/vpnSites', variables('onpremvpnsitename'))]"
       ]

@@ -231,7 +231,11 @@ resource hubvpngw 'Microsoft.Network/vpnGateways@2020-05-01' = {
         bgpSettings: {
             asn: 65515
         }     
-    }       
+    }
+    dependsOn: [        
+        firewall
+        connection
+    ]        
 }
 
 resource policy 'Microsoft.Network/firewallPolicies@2020-05-01' = {
