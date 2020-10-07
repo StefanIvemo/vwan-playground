@@ -940,60 +940,6 @@
         "[resourceId('Microsoft.Network/networkInterfaces', variables('onpremnicname'))]",
         "[resourceId('Microsoft.Storage/storageAccounts', variables('storagename'))]"
       ]
-    },
-    {
-      "type": "Microsoft.Network/virtualHubs/routeTables",
-      "apiVersion": "2020-05-01",
-      "name": "[format('{0}/VNetRouteTable', variables('hubname'))]",
-      "location": "[parameters('location')]",
-      "properties": {
-        "routes": [
-          {
-            "destinationType": "CIDR",
-            "destinations": [
-              "[parameters('onpremaddressprefix')]",
-              "0.0.0.0/0"
-            ],
-            "nextHopType": "IPAddress",
-            "nextHops": [
-              "10.0.0.68"
-            ]
-          }
-        ],
-        "attachedConnections": [
-          "All_Vnets"
-        ]
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/vpnGateways', variables('hubvpngwname'))]"
-      ]
-    },
-    {
-      "type": "Microsoft.Network/virtualHubs/routeTables",
-      "apiVersion": "2020-05-01",
-      "name": "[format('{0}/BranchRouteTable', variables('hubname'))]",
-      "location": "[parameters('location')]",
-      "properties": {
-        "routes": [
-          {
-            "destinationType": "CIDR",
-            "destinations": [
-              "[parameters('spokeaddressprefix')]"
-            ],
-            "nextHopType": "IPAddress",
-            "nextHops": [
-              "10.0.0.68"
-            ]
-          }
-        ],
-        "attachedConnections": [
-          "All_Branches"
-        ]
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/vpnGateways', variables('hubvpngwname'))]",
-        "[resourceId('Microsoft.Network/virtualHubs/routeTables', split(format('{0}/VNetRouteTable', variables('hubname')), '/')[0], split(format('{0}/VNetRouteTable', variables('hubname')), '/')[1])]"
-      ]
     }
   ],
   "outputs": {}
