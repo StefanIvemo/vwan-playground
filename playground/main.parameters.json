@@ -3,7 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "location": {
-            "value": ""
+            "value": "" 
         },
         "nameprefix": {
             "value": "contoso"
@@ -11,41 +11,38 @@
         "wantype": {
             "value": "Standard"
         },
-        "wanaddressprefix": {
+        "hubaddressprefix": {
             "value": "10.0.0.0/24"
         },
         "fwpublicipcount": {
-            "value": 1
+            "value": 2
         },
-        "firewallid": {
-            "value": ""
-        },
-        "vnetaddressprefix": {
+        "spokeaddressprefix": {
             "value": "10.0.1.0/24"
         },
-        "vnetserversubnetprefix": {
+        "spokeserversubnetprefix": {
             "value": "10.0.1.0/26"
         },
-        "vnetbastionsubnetprefix": {
+        "spokebastionsubnetprefix": {
             "value": "10.0.1.64/26"
         },
-        "onpremvnetaddressprefix": {
+        "onpremaddressprefix": {
             "value": "10.20.0.0/24"
         },
-        "onpremvnetserversubnetprefix": {
+        "onpremserversubnetprefix": {
             "value": "10.20.0.0/26"
         },
-        "onpremvnetbastionsubnetprefix": {
+        "onprembastionsubnetprefix": {
             "value": "10.20.0.64/26"
         },
-        "onpremvnetgatewysubnetprefix": {
+        "onpremvpngatewysubnetprefix": {
             "value": "10.20.0.128/26"
         },
         "psk": {
-            "value": "" 
+            "value": ""
         },
         "adminusername": {
-            "value": "" 
+            "value": "sysadmin"
         },
         "adminpassword": {
             "value": ""
@@ -55,7 +52,6 @@
         },
         "vmsize": {
             "value": "Standard_D2_v3"
-        }
-       
+        }      
     }       
 }
