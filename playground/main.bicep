@@ -180,7 +180,22 @@ resource connection 'Microsoft.Network/virtualHubs/hubVirtualNetworkConnections@
         }
         allowHubToRemoteVnetTransit: true
         allowRemoteVnetToUseHubVnetGateways: true
-        enableInternetSecurity: true      
+        enableInternetSecurity: true
+        routingConfiguration: {
+            associatedRouteTable: {
+                id: vnetroutetable.id
+            }
+            propagatedRouteTables: {
+                labels: [
+                    'VNet'
+                ]
+                ids: [
+                    {
+                        id: vnetroutetable.id
+                    }
+                ]
+            }
+        }
     }
     dependsOn: [
         hub
@@ -847,4 +862,25 @@ resource onpremvm 'Microsoft.Compute/virtualMachines@2019-12-01' = {
             }
         }
     }
+}
+
+resource vnetroutetable 'Microsoft.Network/virtualHubs/hubRouteTables@2020-05-01' = {
+    name: '${hubname}/RT_VNet'
+    location: location
+    properties: {
+        routes: [
+            {
+                name: 'toFirewall'
+                destinationType: 'CIDR'
+                destinations: [
+                    '0.0.0.0/0'
+                ]
+                nextHopType: 'ResourceId'
+                nextHop: firewall.id
+            }
+        ]
+        labels: [
+            'VNet'
+        ]
+    }     
 }
