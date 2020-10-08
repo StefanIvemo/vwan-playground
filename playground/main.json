@@ -201,12 +201,28 @@
         },
         "allowHubToRemoteVnetTransit": true,
         "allowRemoteVnetToUseHubVnetGateways": true,
-        "enableInternetSecurity": true
+        "enableInternetSecurity": true,
+        "routingConfiguration": {
+          "associatedRouteTable": {
+            "id": "[resourceId('Microsoft.Network/virtualHubs/hubRouteTables', split(format('{0}/RT_VNet', variables('hubname')), '/')[0], split(format('{0}/RT_VNet', variables('hubname')), '/')[1])]"
+          },
+          "propagatedRouteTables": {
+            "labels": [
+              "VNet"
+            ],
+            "ids": [
+              {
+                "id": "[resourceId('Microsoft.Network/virtualHubs/hubRouteTables', split(format('{0}/RT_VNet', variables('hubname')), '/')[0], split(format('{0}/RT_VNet', variables('hubname')), '/')[1])]"
+              }
+            ]
+          }
+        }
       },
       "dependsOn": [
         "[resourceId('Microsoft.Network/azureFirewalls', variables('fwname'))]",
         "[resourceId('Microsoft.Network/virtualHubs', variables('hubname'))]",
-        "[resourceId('Microsoft.Network/virtualNetworks', variables('spokevnetname'))]"
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('spokevnetname'))]",
+        "[resourceId('Microsoft.Network/virtualHubs/hubRouteTables', split(format('{0}/RT_VNet', variables('hubname')), '/')[0], split(format('{0}/RT_VNet', variables('hubname')), '/')[1])]"
       ]
     },
     {
@@ -942,57 +958,28 @@
       ]
     },
     {
-      "type": "Microsoft.Network/virtualHubs/routeTables",
+      "type": "Microsoft.Network/virtualHubs/hubRouteTables",
       "apiVersion": "2020-05-01",
-      "name": "[format('{0}/VNetRouteTable', variables('hubname'))]",
+      "name": "[format('{0}/RT_VNet', variables('hubname'))]",
       "location": "[parameters('location')]",
       "properties": {
         "routes": [
           {
+            "name": "toFirewall",
             "destinationType": "CIDR",
             "destinations": [
-              "[parameters('onpremaddressprefix')]",
               "0.0.0.0/0"
             ],
-            "nextHopType": "IPAddress",
-            "nextHops": [
-              "10.0.0.68"
-            ]
+            "nextHopType": "ResourceId",
+            "nextHop": "[resourceId('Microsoft.Network/azureFirewalls', variables('fwname'))]"
           }
         ],
-        "attachedConnections": [
-          "All_Vnets"
+        "labels": [
+          "VNet"
         ]
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Network/vpnGateways', variables('hubvpngwname'))]"
-      ]
-    },
-    {
-      "type": "Microsoft.Network/virtualHubs/routeTables",
-      "apiVersion": "2020-05-01",
-      "name": "[format('{0}/BranchRouteTable', variables('hubname'))]",
-      "location": "[parameters('location')]",
-      "properties": {
-        "routes": [
-          {
-            "destinationType": "CIDR",
-            "destinations": [
-              "[parameters('spokeaddressprefix')]"
-            ],
-            "nextHopType": "IPAddress",
-            "nextHops": [
-              "10.0.0.68"
-            ]
-          }
-        ],
-        "attachedConnections": [
-          "All_Branches"
-        ]
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/vpnGateways', variables('hubvpngwname'))]",
-        "[resourceId('Microsoft.Network/virtualHubs/routeTables', split(format('{0}/VNetRouteTable', variables('hubname')), '/')[0], split(format('{0}/VNetRouteTable', variables('hubname')), '/')[1])]"
+        "[resourceId('Microsoft.Network/azureFirewalls', variables('fwname'))]"
       ]
     }
   ],

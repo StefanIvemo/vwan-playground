@@ -180,7 +180,22 @@ resource connection 'Microsoft.Network/virtualHubs/hubVirtualNetworkConnections@
         }
         allowHubToRemoteVnetTransit: true
         allowRemoteVnetToUseHubVnetGateways: true
-        enableInternetSecurity: true      
+        enableInternetSecurity: true
+        routingConfiguration: {
+            associatedRouteTable: {
+                id: vnetroutetable.id
+            }
+            propagatedRouteTables: {
+                labels: [
+                    'VNet'
+                ]
+                ids: [
+                    {
+                        id: vnetroutetable.id
+                    }
+                ]
+            }
+        }
     }
     dependsOn: [
         hub
@@ -849,55 +864,23 @@ resource onpremvm 'Microsoft.Compute/virtualMachines@2019-12-01' = {
     }
 }
 
-resource vnetroutetable 'Microsoft.Network/virtualHubs/routeTables@2020-05-01' = {
-    name: '${hubname}/VNetRouteTable'
+resource vnetroutetable 'Microsoft.Network/virtualHubs/hubRouteTables@2020-05-01' = {
+    name: '${hubname}/RT_VNet'
     location: location
     properties: {
         routes: [
             {
+                name: 'toFirewall'
                 destinationType: 'CIDR'
                 destinations: [
-                    onpremaddressprefix
                     '0.0.0.0/0'
                 ]
-                nextHopType: 'IPAddress'
-                nextHops: [
-                    '10.0.0.68'
-                ]
+                nextHopType: 'ResourceId'
+                nextHop: firewall.id
             }
         ]
-        attachedConnections: [
-            'All_Vnets'
+        labels: [
+            'VNet'
         ]
-    }
-    dependsOn: [        
-        hubvpngw       
-    ] 
-}
-
-resource branchroutetable 'Microsoft.Network/virtualHubs/routeTables@2020-05-01' = {
-    name: '${hubname}/BranchRouteTable'
-    location: location
-    properties: {
-        routes: [
-            {
-                
-                destinationType: 'CIDR'
-                destinations: [
-                    spokeaddressprefix
-                ]
-                nextHopType: 'IPAddress'
-                nextHops: [
-                    '10.0.0.68'
-                ]
-            }
-        ]        
-        attachedConnections: [
-            'All_Branches'
-        ]
-    }
-    dependsOn: [        
-        hubvpngw
-        vnetroutetable       
-    ] 
+    }     
 }
