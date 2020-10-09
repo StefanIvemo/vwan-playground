@@ -50,3 +50,5 @@ Other improvements can be requested by creating a new issue.
 
 ## Contributing
 If you find this project interested and want to contribute, please feel free to submit Pull Requests with suggested improvements.
+
+[![Analytics](https://ga-beacon.appspot.com/UA-179149113-2/welcome-page?pixel)](https://github.com/igrigorik/ga-beacon)
