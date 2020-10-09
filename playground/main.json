@@ -27,6 +27,13 @@
         "Basic"
       ]
     },
+    "regionaladdressspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the CIDR that contains all address spaces used in Azure, should cover the VWAN Hub and all attached VNet Spokes. Used for routing."
+      },
+      "defaultValue": "10.0.0.0/16"
+    },
     "hubaddressprefix": {
       "type": "string",
       "metadata": {
@@ -976,6 +983,32 @@
         ],
         "labels": [
           "VNet"
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualHubs/hubRouteTables', split(format('{0}/defaultRouteTable', variables('hubname')), '/')[0], split(format('{0}/defaultRouteTable', variables('hubname')), '/')[1])]",
+        "[resourceId('Microsoft.Network/azureFirewalls', variables('fwname'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/virtualHubs/hubRouteTables",
+      "apiVersion": "2020-05-01",
+      "name": "[format('{0}/defaultRouteTable', variables('hubname'))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "routes": [
+          {
+            "name": "toFirewall",
+            "destinationType": "CIDR",
+            "destinations": [
+              "[parameters('regionaladdressspace')]"
+            ],
+            "nextHopType": "ResourceId",
+            "nextHop": "[resourceId('Microsoft.Network/azureFirewalls', variables('fwname'))]"
+          }
+        ],
+        "labels": [
+          "default"
         ]
       },
       "dependsOn": [

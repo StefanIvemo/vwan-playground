@@ -20,6 +20,12 @@ param wantype string {
       description: 'Specifies the type of Virtual WAN.'
     }
 }
+param regionaladdressspace string {
+    default: '10.0.0.0/16'
+    metadata: {
+      description: 'Specifies the CIDR that contains all address spaces used in Azure, should cover the VWAN Hub and all attached VNet Spokes. Used for routing.'
+    }
+}
 param hubaddressprefix string {
     default: '10.0.0.0/24'
     metadata: {
@@ -882,5 +888,29 @@ resource vnetroutetable 'Microsoft.Network/virtualHubs/hubRouteTables@2020-05-01
         labels: [
             'VNet'
         ]
-    }     
+    }
+    dependsOn: [
+        defaultroutetable
+    ]         
+}
+
+resource defaultroutetable 'Microsoft.Network/virtualHubs/hubRouteTables@2020-05-01' = {
+    name: '${hubname}/defaultRouteTable'
+    location: location
+    properties: {
+        routes: [
+            {
+                name: 'toFirewall'
+                destinationType: 'CIDR'
+                destinations: [
+                    regionaladdressspace
+                ]
+                nextHopType: 'ResourceId'
+                nextHop: firewall.id
+            }
+        ]
+        labels: [
+            'default'
+        ]
+    }         
 }
