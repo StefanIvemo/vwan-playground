@@ -1,0 +1,2 @@
+## Cleanup script
+Removing Azure Virtual WAN with secure virtual hub from the Azure portal takes forever with all dependencies. This PowerShell Script deploys an empty ARM template in Complete mode to remove all resources.
