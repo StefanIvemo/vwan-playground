@@ -3,13 +3,16 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "location": {
-            "value": "" 
+            "value": "westeurope"
         },
         "nameprefix": {
             "value": "contoso"
         },
         "wantype": {
             "value": "Standard"
+        },
+        "regionaladdressspace": {
+            "value": "10.0.0.0/16"
         },
         "hubaddressprefix": {
             "value": "10.0.0.0/24"
@@ -52,6 +55,6 @@
         },
         "vmsize": {
             "value": "Standard_D2_v3"
-        }      
+        }   
     }       
 }
