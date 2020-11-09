@@ -74,7 +74,7 @@ param onprembastionsubnetprefix string {
       description: 'Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet'
     }
 }
-param onpremvpngatewysubnetprefix string {
+param onpremvpngatewaysubnetprefix string {
     default: '10.20.0.128/26'
     metadata: {
       description: 'Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet'
@@ -206,6 +206,7 @@ resource connection 'Microsoft.Network/virtualHubs/hubVirtualNetworkConnections@
     dependsOn: [
         hub
         firewall
+        hubvpngw
     ]     
 }
 
@@ -218,13 +219,13 @@ resource onpremvpnsite 'Microsoft.Network/vpnSites@2020-05-01' = {
         }
         bgpProperties: {
             asn: 65010
-            bgpPeeringAddress: onpremvpngw.properties.BgpSettings.BgpPeeringAddress
+            bgpPeeringAddress: onpremvpngw.properties.bgpSettings.bgpPeeringAddress
             peerWeight: 0
         }
         deviceProperties: {
             linkSpeedInMbps: 0
         }
-        ipAddress: onpremvpngwpip.properties.IpAddress
+        ipAddress: onpremvpngwpip.properties.ipAddress
         virtualWan: {
             id: wan.id
         }        
@@ -234,20 +235,7 @@ resource onpremvpnsite 'Microsoft.Network/vpnSites@2020-05-01' = {
 resource hubvpngw 'Microsoft.Network/vpnGateways@2020-05-01' = {
     name: hubvpngwname
     location: location   
-    properties: {
-        connections: [
-            {
-                name: 'HubToOnPremConnection'
-                properties: {
-                    connectionBandwidth: 10
-                    enableBgp: true
-                    sharedKey: psk
-                    remoteVpnSite: {
-                        id: onpremvpnsite.id
-                    }
-                }
-            }
-        ]
+    properties: {        
         virtualHub: {
             id: hub.id
         }
@@ -257,7 +245,22 @@ resource hubvpngw 'Microsoft.Network/vpnGateways@2020-05-01' = {
     }
     dependsOn: [        
         firewall
-        connection
+        vnetroutetable
+    ]        
+}
+
+resource hubvpnconnection 'Microsoft.Network/vpnGateways/vpnConnections@2020-05-01' = {
+    name: '${hubvpngwname}/HubToOnPremConnection'
+    properties: {
+        connectionBandwidth: 10
+        enableBgp: true
+        sharedKey: psk
+        remoteVpnSite: {
+            id: onpremvpnsite.id
+        }
+    }
+    dependsOn: [      
+        hubvpngw
     ]        
 }
 
@@ -277,7 +280,7 @@ resource loganalytics 'Microsoft.OperationalInsights/workspaces@2020-03-01-previ
     location: location
     properties: {
         sku: {
-            name: 'pergb2018'
+            name: 'PerGB2018'
         }
     }
 }
@@ -382,7 +385,7 @@ resource onpremvpngw 'Microsoft.Network/virtualNetworkGateways@2020-05-01' = {
     name: onpremvpngwname
     location: location    
     properties: {
-        gatewayType: 'vpn'
+        gatewayType: 'Vpn'
         ipConfigurations: [
             {
                 name: 'default'
@@ -416,7 +419,7 @@ resource localnetworkgw 'Microsoft.Network/localNetworkGateways@2020-05-01' = {
     location: location    
     properties: {
         localNetworkAddressSpace:{
-            AddressPrefixes: [
+            addressPrefixes: [
                 spokeaddressprefix
                 hubaddressprefix
             ]
@@ -467,7 +470,7 @@ resource spokebastionnsg 'Microsoft.Network/networkSecurityGroups@2019-08-01' = 
                     protocol: 'Tcp'
                     sourcePortRange: '*'
                     sourceAddressPrefix: '*'
-                    destinationPortRange: 443
+                    destinationPortRange: '443'
                     destinationAddressPrefix: '*'
                     access: 'Allow'
                     priority: 100
@@ -481,8 +484,8 @@ resource spokebastionnsg 'Microsoft.Network/networkSecurityGroups@2019-08-01' = 
                     sourcePortRange: '*'
                     sourceAddressPrefix: 'GatewayManager'
                     destinationPortRanges: [
-                        443
-                        4443
+                        '443'
+                        '4443'
                     ]
                     destinationAddressPrefix: '*'
                     access: 'Allow'
@@ -509,7 +512,7 @@ resource spokebastionnsg 'Microsoft.Network/networkSecurityGroups@2019-08-01' = 
                     protocol: 'Tcp'
                     sourcePortRange: '*'
                     sourceAddressPrefix: '*'
-                    destinationPortRange: 22
+                    destinationPortRange: '22'
                     destinationAddressPrefix: 'VirtualNetwork'
                     access: 'Allow'
                     priority: 100
@@ -522,7 +525,7 @@ resource spokebastionnsg 'Microsoft.Network/networkSecurityGroups@2019-08-01' = 
                     protocol: 'Tcp'
                     sourcePortRange: '*'
                     sourceAddressPrefix: '*'
-                    destinationPortRange: 3389
+                    destinationPortRange: '3389'
                     destinationAddressPrefix: 'VirtualNetwork'
                     access: 'Allow'
                     priority: 110
@@ -535,7 +538,7 @@ resource spokebastionnsg 'Microsoft.Network/networkSecurityGroups@2019-08-01' = 
                     protocol: 'Tcp'
                     sourcePortRange: '*'
                     sourceAddressPrefix: '*'
-                    destinationPortRange: 443
+                    destinationPortRange: '443'
                     destinationAddressPrefix: 'AzureCloud'
                     access: 'Allow'
                     priority: 120
@@ -608,7 +611,7 @@ resource onpremvnet 'Microsoft.Network/virtualNetworks@2020-05-01' = {
             {
                 name: 'GatewaySubnet'
                 properties: {
-                    addressPrefix: onpremvpngatewysubnetprefix                 
+                    addressPrefix: onpremvpngatewaysubnetprefix                 
                 }            
             }             
         ]
@@ -634,7 +637,7 @@ resource onprembastionnsg 'Microsoft.Network/networkSecurityGroups@2019-08-01' =
                     protocol: 'Tcp'
                     sourcePortRange: '*'
                     sourceAddressPrefix: '*'
-                    destinationPortRange: 443
+                    destinationPortRange: '443'
                     destinationAddressPrefix: '*'
                     access: 'Allow'
                     priority: 100
@@ -648,8 +651,8 @@ resource onprembastionnsg 'Microsoft.Network/networkSecurityGroups@2019-08-01' =
                     sourcePortRange: '*'
                     sourceAddressPrefix: 'GatewayManager'
                     destinationPortRanges: [
-                        443
-                        4443
+                        '443'
+                        '4443'
                     ]
                     destinationAddressPrefix: '*'
                     access: 'Allow'
@@ -676,7 +679,7 @@ resource onprembastionnsg 'Microsoft.Network/networkSecurityGroups@2019-08-01' =
                     protocol: 'Tcp'
                     sourcePortRange: '*'
                     sourceAddressPrefix: '*'
-                    destinationPortRange: 22
+                    destinationPortRange: '22'
                     destinationAddressPrefix: 'VirtualNetwork'
                     access: 'Allow'
                     priority: 100
@@ -689,7 +692,7 @@ resource onprembastionnsg 'Microsoft.Network/networkSecurityGroups@2019-08-01' =
                     protocol: 'Tcp'
                     sourcePortRange: '*'
                     sourceAddressPrefix: '*'
-                    destinationPortRange: 3389
+                    destinationPortRange: '3389'
                     destinationAddressPrefix: 'VirtualNetwork'
                     access: 'Allow'
                     priority: 110
@@ -702,7 +705,7 @@ resource onprembastionnsg 'Microsoft.Network/networkSecurityGroups@2019-08-01' =
                     protocol: 'Tcp'
                     sourcePortRange: '*'
                     sourceAddressPrefix: '*'
-                    destinationPortRange: 443
+                    destinationPortRange: '443'
                     destinationAddressPrefix: 'AzureCloud'
                     access: 'Allow'
                     priority: 120
@@ -872,7 +875,6 @@ resource onpremvm 'Microsoft.Compute/virtualMachines@2019-12-01' = {
 
 resource vnetroutetable 'Microsoft.Network/virtualHubs/hubRouteTables@2020-05-01' = {
     name: '${hubname}/RT_VNet'
-    location: location
     properties: {
         routes: [
             {
@@ -896,7 +898,6 @@ resource vnetroutetable 'Microsoft.Network/virtualHubs/hubRouteTables@2020-05-01
 
 resource defaultroutetable 'Microsoft.Network/virtualHubs/hubRouteTables@2020-05-01' = {
     name: '${hubname}/defaultRouteTable'
-    location: location
     properties: {
         routes: [
             {

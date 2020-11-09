@@ -38,17 +38,11 @@
         "onprembastionsubnetprefix": {
             "value": "10.20.0.64/26"
         },
-        "onpremvpngatewysubnetprefix": {
+        "onpremvpngatewaysubnetprefix": {
             "value": "10.20.0.128/26"
-        },
-        "psk": {
-            "value": ""
         },
         "adminusername": {
             "value": "sysadmin"
-        },
-        "adminpassword": {
-            "value": ""
         },
         "windowsosversion": {
             "value": "2019-Datacenter"

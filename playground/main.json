@@ -90,7 +90,7 @@
       },
       "defaultValue": "10.20.0.64/26"
     },
-    "onpremvpngatewysubnetprefix": {
+    "onpremvpngatewaysubnetprefix": {
       "type": "string",
       "metadata": {
         "description": "Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet"
@@ -228,6 +228,7 @@
       "dependsOn": [
         "[resourceId('Microsoft.Network/azureFirewalls', variables('fwname'))]",
         "[resourceId('Microsoft.Network/virtualHubs', variables('hubname'))]",
+        "[resourceId('Microsoft.Network/vpnGateways', variables('hubvpngwname'))]",
         "[resourceId('Microsoft.Network/virtualNetworks', variables('spokevnetname'))]",
         "[resourceId('Microsoft.Network/virtualHubs/hubRouteTables', split(format('{0}/RT_VNet', variables('hubname')), '/')[0], split(format('{0}/RT_VNet', variables('hubname')), '/')[1])]"
       ]
@@ -243,13 +244,13 @@
         },
         "bgpProperties": {
           "asn": 65010,
-          "bgpPeeringAddress": "[reference(resourceId('Microsoft.Network/virtualNetworkGateways', variables('onpremvpngwname'))).BgpSettings.BgpPeeringAddress]",
+          "bgpPeeringAddress": "[reference(resourceId('Microsoft.Network/virtualNetworkGateways', variables('onpremvpngwname'))).bgpSettings.bgpPeeringAddress]",
           "peerWeight": 0
         },
         "deviceProperties": {
           "linkSpeedInMbps": 0
         },
-        "ipAddress": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('onpremvpngwpipname'))).IpAddress]",
+        "ipAddress": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('onpremvpngwpipname'))).ipAddress]",
         "virtualWan": {
           "id": "[resourceId('Microsoft.Network/virtualWans', variables('wanname'))]"
         }
@@ -266,19 +267,6 @@
       "name": "[variables('hubvpngwname')]",
       "location": "[parameters('location')]",
       "properties": {
-        "connections": [
-          {
-            "name": "HubToOnPremConnection",
-            "properties": {
-              "connectionBandwidth": 10,
-              "enableBgp": true,
-              "sharedKey": "[parameters('psk')]",
-              "remoteVpnSite": {
-                "id": "[resourceId('Microsoft.Network/vpnSites', variables('onpremvpnsitename'))]"
-              }
-            }
-          }
-        ],
         "virtualHub": {
           "id": "[resourceId('Microsoft.Network/virtualHubs', variables('hubname'))]"
         },
@@ -287,9 +275,25 @@
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Network/virtualHubs/hubVirtualNetworkConnections', split(format('{0}/{1}', variables('hubname'), variables('spokeconnectionname')), '/')[0], split(format('{0}/{1}', variables('hubname'), variables('spokeconnectionname')), '/')[1])]",
         "[resourceId('Microsoft.Network/azureFirewalls', variables('fwname'))]",
         "[resourceId('Microsoft.Network/virtualHubs', variables('hubname'))]",
+        "[resourceId('Microsoft.Network/virtualHubs/hubRouteTables', split(format('{0}/RT_VNet', variables('hubname')), '/')[0], split(format('{0}/RT_VNet', variables('hubname')), '/')[1])]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/vpnGateways/vpnConnections",
+      "apiVersion": "2020-05-01",
+      "name": "[format('{0}/HubToOnPremConnection', variables('hubvpngwname'))]",
+      "properties": {
+        "connectionBandwidth": 10,
+        "enableBgp": true,
+        "sharedKey": "[parameters('psk')]",
+        "remoteVpnSite": {
+          "id": "[resourceId('Microsoft.Network/vpnSites', variables('onpremvpnsitename'))]"
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/vpnGateways', variables('hubvpngwname'))]",
         "[resourceId('Microsoft.Network/vpnSites', variables('onpremvpnsitename'))]"
       ]
     },
@@ -312,7 +316,7 @@
       "location": "[parameters('location')]",
       "properties": {
         "sku": {
-          "name": "pergb2018"
+          "name": "PerGB2018"
         }
       }
     },
@@ -431,7 +435,7 @@
       "name": "[variables('onpremvpngwname')]",
       "location": "[parameters('location')]",
       "properties": {
-        "gatewayType": "vpn",
+        "gatewayType": "Vpn",
         "ipConfigurations": [
           {
             "name": "default",
@@ -470,7 +474,7 @@
       "location": "[parameters('location')]",
       "properties": {
         "localNetworkAddressSpace": {
-          "AddressPrefixes": [
+          "addressPrefixes": [
             "[parameters('spokeaddressprefix')]",
             "[parameters('hubaddressprefix')]"
           ]
@@ -527,7 +531,7 @@
               "protocol": "Tcp",
               "sourcePortRange": "*",
               "sourceAddressPrefix": "*",
-              "destinationPortRange": 443,
+              "destinationPortRange": "443",
               "destinationAddressPrefix": "*",
               "access": "Allow",
               "priority": 100,
@@ -541,8 +545,8 @@
               "sourcePortRange": "*",
               "sourceAddressPrefix": "GatewayManager",
               "destinationPortRanges": [
-                443,
-                4443
+                "443",
+                "4443"
               ],
               "destinationAddressPrefix": "*",
               "access": "Allow",
@@ -569,7 +573,7 @@
               "protocol": "Tcp",
               "sourcePortRange": "*",
               "sourceAddressPrefix": "*",
-              "destinationPortRange": 22,
+              "destinationPortRange": "22",
               "destinationAddressPrefix": "VirtualNetwork",
               "access": "Allow",
               "priority": 100,
@@ -582,7 +586,7 @@
               "protocol": "Tcp",
               "sourcePortRange": "*",
               "sourceAddressPrefix": "*",
-              "destinationPortRange": 3389,
+              "destinationPortRange": "3389",
               "destinationAddressPrefix": "VirtualNetwork",
               "access": "Allow",
               "priority": 110,
@@ -595,7 +599,7 @@
               "protocol": "Tcp",
               "sourcePortRange": "*",
               "sourceAddressPrefix": "*",
-              "destinationPortRange": 443,
+              "destinationPortRange": "443",
               "destinationAddressPrefix": "AzureCloud",
               "access": "Allow",
               "priority": 120,
@@ -675,7 +679,7 @@
           {
             "name": "GatewaySubnet",
             "properties": {
-              "addressPrefix": "[parameters('onpremvpngatewysubnetprefix')]"
+              "addressPrefix": "[parameters('onpremvpngatewaysubnetprefix')]"
             }
           }
         ]
@@ -705,7 +709,7 @@
               "protocol": "Tcp",
               "sourcePortRange": "*",
               "sourceAddressPrefix": "*",
-              "destinationPortRange": 443,
+              "destinationPortRange": "443",
               "destinationAddressPrefix": "*",
               "access": "Allow",
               "priority": 100,
@@ -719,8 +723,8 @@
               "sourcePortRange": "*",
               "sourceAddressPrefix": "GatewayManager",
               "destinationPortRanges": [
-                443,
-                4443
+                "443",
+                "4443"
               ],
               "destinationAddressPrefix": "*",
               "access": "Allow",
@@ -747,7 +751,7 @@
               "protocol": "Tcp",
               "sourcePortRange": "*",
               "sourceAddressPrefix": "*",
-              "destinationPortRange": 22,
+              "destinationPortRange": "22",
               "destinationAddressPrefix": "VirtualNetwork",
               "access": "Allow",
               "priority": 100,
@@ -760,7 +764,7 @@
               "protocol": "Tcp",
               "sourcePortRange": "*",
               "sourceAddressPrefix": "*",
-              "destinationPortRange": 3389,
+              "destinationPortRange": "3389",
               "destinationAddressPrefix": "VirtualNetwork",
               "access": "Allow",
               "priority": 110,
@@ -773,7 +777,7 @@
               "protocol": "Tcp",
               "sourcePortRange": "*",
               "sourceAddressPrefix": "*",
-              "destinationPortRange": 443,
+              "destinationPortRange": "443",
               "destinationAddressPrefix": "AzureCloud",
               "access": "Allow",
               "priority": 120,
@@ -968,7 +972,6 @@
       "type": "Microsoft.Network/virtualHubs/hubRouteTables",
       "apiVersion": "2020-05-01",
       "name": "[format('{0}/RT_VNet', variables('hubname'))]",
-      "location": "[parameters('location')]",
       "properties": {
         "routes": [
           {
@@ -994,7 +997,6 @@
       "type": "Microsoft.Network/virtualHubs/hubRouteTables",
       "apiVersion": "2020-05-01",
       "name": "[format('{0}/defaultRouteTable', variables('hubname'))]",
-      "location": "[parameters('location')]",
       "properties": {
         "routes": [
           {
@@ -1015,6 +1017,5 @@
         "[resourceId('Microsoft.Network/azureFirewalls', variables('fwname'))]"
       ]
     }
-  ],
-  "outputs": {}
+  ]
 }
