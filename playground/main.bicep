@@ -269,10 +269,164 @@ resource policy 'Microsoft.Network/firewallPolicies@2020-05-01' = {
     location: location
     properties: {
         threatIntelMode: 'Alert'
-        threatIntelWhitelist: {
-            ipAddresses: []
+        dnsSettings: {
+            servers: [
+                '168.63.129.16'
+            ]
+            enableProxy: true
         }
     }
+}
+
+resource platformrcgroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2020-05-01' = {
+    name: '${fwpolicyname}/Platform-Rules'
+    properties: {
+        priority: 100
+        ruleCollections: [
+            {
+            ruleCollectionType:  'FirewallPolicyFilterRuleCollection'
+            name: 'Allow-Azure-KMS'
+            priority: 100
+            action:{
+                 type: 'Allow'
+            }
+            rules: [
+                {
+                    ruleType: 'NetworkRule'
+                    name: 'Azure-KMS-Service'
+                    description: 'Allow traffic from all Address Spaces to Azure platform KMS Service'
+                    sourceAddresses: [
+                        regionaladdressspace
+                    ]
+                    sourceIpGroups: []
+                    ipProtocols: [
+                        'TCP'
+                    ]
+                    destinationPorts: [
+                        '1688'
+                    ]
+                    destinationIpGroups: []
+                    destinationAddresses: []
+                    destinationFqdns: [
+                        'kms.core.windows.net'
+                    ]
+                }                
+            ]       
+            }
+            {
+                ruleCollectionType:  'FirewallPolicyFilterRuleCollection'
+                name: 'Allow-Windows-Update'
+                priority: 200
+                action:{
+                     type: 'Allow'
+                }
+                rules: [
+                    {
+                        ruleType: 'ApplicationRule'
+                        name: 'Http'
+                        description: 'Allow traffic from all sources to Azure platform KMS Service'
+                        sourceAddresses: [
+                            regionaladdressspace
+                        ]
+                        sourceIpGroups: []
+                        protocols: [
+                            {
+                                protocolType:'Http'
+                                port: 80   
+                            }
+                        ]
+                        targetFqdns: []
+                        fqdnTags:[
+                            'WindowsUpdate'
+                        ]
+                    }
+                    {
+                    ruleType: 'ApplicationRule'
+                    name: 'Https'
+                    description: 'Allow traffic from all sources to Azure platform KMS Service'
+                    sourceAddresses: [
+                        regionaladdressspace
+                    ]
+                    sourceIpGroups: []
+                    protocols: [
+                        {
+                            protocolType:'Https'
+                            port: 443   
+                        }
+                    ]
+                    targetFqdns: []
+                    fqdnTags:[
+                        'WindowsUpdate'
+                    ]
+                }                
+                ]       
+            }
+        ]
+    }
+    dependsOn: [
+        policy
+    ]
+}
+
+resource spoke1rcgroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2020-05-01' = {
+    name: '${fwpolicyname}/${spokevnetname}-Rules'
+    properties: {
+        priority: 200
+        ruleCollections: [
+            {
+                ruleCollectionType:  'FirewallPolicyFilterRuleCollection'
+                name: 'Allow-Outbound-Http-Microsoft'
+                priority: 100
+                action:{
+                     type: 'Allow'
+                }
+                rules: [
+                    {
+                        ruleType: 'ApplicationRule'
+                        name: 'Http'
+                        description: 'Allow traffic to *.microsoft.com'
+                        sourceAddresses: [
+                            spokeaddressprefix
+                        ]
+                        sourceIpGroups: []
+                        protocols: [
+                            {
+                                protocolType:'Http'
+                                port: 80   
+                            }
+                        ]
+                        targetFqdns: [
+                            '*.microsoft.com'
+                        ]
+                        fqdnTags: []
+                    }
+                    {
+                    ruleType: 'ApplicationRule'
+                    name: 'Https'
+                    description: 'Allow traffic to *.microsoft.com'
+                    sourceAddresses: [
+                        regionaladdressspace
+                    ]
+                    sourceIpGroups: []
+                    protocols: [
+                        {
+                            protocolType:'Https'
+                            port: 443   
+                        }
+                    ]
+                    targetFqdns: [
+                        '*.microsoft.com'
+                    ]
+                    fqdnTags: []
+                }                
+                ]       
+            }
+        ]
+    }
+    dependsOn: [
+        policy
+        platformrcgroup
+    ]
 }
 
 resource loganalytics 'Microsoft.OperationalInsights/workspaces@2020-03-01-preview' = {
@@ -345,6 +499,11 @@ resource spokevnet 'Microsoft.Network/virtualNetworks@2020-05-01' = {
         addressSpace: {
             addressPrefixes: [
                 spokeaddressprefix
+            ]
+        }
+        dhcpOptions:{
+            dnsServers: [
+                firewall.properties.hubIPAddresses.privateIPAddress
             ]
         }
         subnets: [
