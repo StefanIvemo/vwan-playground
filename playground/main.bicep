@@ -429,7 +429,6 @@ resource spoke1rcgroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@
     ]
 }
 
-
 resource loganalytics 'Microsoft.OperationalInsights/workspaces@2020-03-01-preview' = {
     name: loganalyticsname
     location: location
