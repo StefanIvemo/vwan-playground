@@ -304,10 +304,166 @@
       "location": "[parameters('location')]",
       "properties": {
         "threatIntelMode": "Alert",
-        "threatIntelWhitelist": {
-          "ipAddresses": []
+        "dnsSettings": {
+          "servers": [
+            "168.63.129.16"
+          ],
+          "enableProxy": true
         }
       }
+    },
+    {
+      "type": "Microsoft.Network/firewallPolicies/ruleCollectionGroups",
+      "apiVersion": "2020-05-01",
+      "name": "[format('{0}/Platform-Rules', variables('fwpolicyname'))]",
+      "properties": {
+        "priority": 100,
+        "ruleCollections": [
+          {
+            "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
+            "name": "Allow-Azure-KMS",
+            "priority": 100,
+            "action": {
+              "type": "Allow"
+            },
+            "rules": [
+              {
+                "ruleType": "NetworkRule",
+                "name": "Azure-KMS-Service",
+                "description": "Allow traffic from all Address Spaces to Azure platform KMS Service",
+                "sourceAddresses": [
+                  "[parameters('regionaladdressspace')]"
+                ],
+                "sourceIpGroups": [],
+                "ipProtocols": [
+                  "TCP"
+                ],
+                "destinationPorts": [
+                  "1688"
+                ],
+                "destinationIpGroups": [],
+                "destinationAddresses": [],
+                "destinationFqdns": [
+                  "kms.core.windows.net"
+                ]
+              }
+            ]
+          },
+          {
+            "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
+            "name": "Allow-Windows-Update",
+            "priority": 200,
+            "action": {
+              "type": "Allow"
+            },
+            "rules": [
+              {
+                "ruleType": "ApplicationRule",
+                "name": "Http",
+                "description": "Allow traffic from all sources to Azure platform KMS Service",
+                "sourceAddresses": [
+                  "[parameters('regionaladdressspace')]"
+                ],
+                "sourceIpGroups": [],
+                "protocols": [
+                  {
+                    "protocolType": "Http",
+                    "port": 80
+                  }
+                ],
+                "targetFqdns": [],
+                "fqdnTags": [
+                  "WindowsUpdate"
+                ]
+              },
+              {
+                "ruleType": "ApplicationRule",
+                "name": "Https",
+                "description": "Allow traffic from all sources to Azure platform KMS Service",
+                "sourceAddresses": [
+                  "[parameters('regionaladdressspace')]"
+                ],
+                "sourceIpGroups": [],
+                "protocols": [
+                  {
+                    "protocolType": "Https",
+                    "port": 443
+                  }
+                ],
+                "targetFqdns": [],
+                "fqdnTags": [
+                  "WindowsUpdate"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/firewallPolicies', variables('fwpolicyname'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/firewallPolicies/ruleCollectionGroups",
+      "apiVersion": "2020-05-01",
+      "name": "[format('{0}/{1}-Rules', variables('fwpolicyname'), variables('spokevnetname'))]",
+      "properties": {
+        "priority": 200,
+        "ruleCollections": [
+          {
+            "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
+            "name": "Allow-Outbound-Http-Microsoft",
+            "priority": 100,
+            "action": {
+              "type": "Allow"
+            },
+            "rules": [
+              {
+                "ruleType": "ApplicationRule",
+                "name": "Http",
+                "description": "Allow traffic to *.microsoft.com",
+                "sourceAddresses": [
+                  "[parameters('spokeaddressprefix')]"
+                ],
+                "sourceIpGroups": [],
+                "protocols": [
+                  {
+                    "protocolType": "Http",
+                    "port": 80
+                  }
+                ],
+                "targetFqdns": [
+                  "*.microsoft.com"
+                ],
+                "fqdnTags": []
+              },
+              {
+                "ruleType": "ApplicationRule",
+                "name": "Https",
+                "description": "Allow traffic to *.microsoft.com",
+                "sourceAddresses": [
+                  "[parameters('regionaladdressspace')]"
+                ],
+                "sourceIpGroups": [],
+                "protocols": [
+                  {
+                    "protocolType": "Https",
+                    "port": 443
+                  }
+                ],
+                "targetFqdns": [
+                  "*.microsoft.com"
+                ],
+                "fqdnTags": []
+              }
+            ]
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/firewallPolicies/ruleCollectionGroups', split(format('{0}/Platform-Rules', variables('fwpolicyname')), '/')[0], split(format('{0}/Platform-Rules', variables('fwpolicyname')), '/')[1])]",
+        "[resourceId('Microsoft.Network/firewallPolicies', variables('fwpolicyname'))]"
+      ]
     },
     {
       "type": "Microsoft.OperationalInsights/workspaces",
@@ -391,6 +547,11 @@
             "[parameters('spokeaddressprefix')]"
           ]
         },
+        "dhcpOptions": {
+          "dnsServers": [
+            "[reference(resourceId('Microsoft.Network/azureFirewalls', variables('fwname'))).hubIPAddresses.privateIPAddress]"
+          ]
+        },
         "subnets": [
           {
             "name": "snet-servers",
@@ -413,6 +574,7 @@
         ]
       },
       "dependsOn": [
+        "[resourceId('Microsoft.Network/azureFirewalls', variables('fwname'))]",
         "[resourceId('Microsoft.Network/networkSecurityGroups', variables('spokebastionnsgname'))]",
         "[resourceId('Microsoft.Network/networkSecurityGroups', variables('spokeservernsgname'))]"
       ]
