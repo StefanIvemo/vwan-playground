@@ -17,6 +17,7 @@ The Azure Virtual WAN Playground deploys the following topology:
   - Virtual WAN Hub (Secured Virtual Hub)
   - Firewall Policy
   - Azure Firewall
+    - Rule Collection Groups
   - Hub Route Table
   - Virtual Network Connection (Spoke VNet)
     - Using custom route table sending branch and internet traffic to firewall
