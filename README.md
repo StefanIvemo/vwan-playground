@@ -39,11 +39,9 @@ The Azure Virtual WAN Playground deploys the following topology:
 ## Improvements
 Azure Virtual WAN Playground will evolve over time with new features added regularly. The following improvements are planned:
 
-- When Bicep language supports the `condition` property it will be possible to decide which features to deployed using parameters.
-- A cleanup script will be added that removes all resources in the correct order for quick removal of the solution.
+- Will update the Bicep template to use modules
+  - With modules in-place multiple sample playgrounds will be available
 - User VPN Gateway and User VPN Configuration.
-- Additional Spoke VNet (when Bicep language supports `copy`)
-- Azure Firewall default rule set added to Firewall Policy.
 - Azure Firewall Workbook added to Log Analytics Workspace.
 - Azure Sentinel.
 
