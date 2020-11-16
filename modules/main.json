@@ -5,7 +5,7 @@
     "location": {
       "type": "string",
       "metadata": {
-        "description": "Specifies the Azure location where the key vault should be created."
+        "description": "Specifies the Azure location where the resource should be created."
       },
       "defaultValue": "westeurope"
     },
@@ -89,6 +89,13 @@
         "description": "Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet"
       },
       "defaultValue": "10.20.0.128/26"
+    },
+    "onpremfirewallsubnetprefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet"
+      },
+      "defaultValue": "10.20.0.192/26"
     },
     "psk": {
       "type": "secureString",
@@ -214,7 +221,7 @@
             "location": {
               "type": "string",
               "metadata": {
-                "description": "Specifies the Azure location where the key vault should be created."
+                "description": "Specifies the Azure location where the resource should be created."
               },
               "defaultValue": "[resourceGroup().location]"
             },
@@ -295,7 +302,7 @@
             "location": {
               "type": "string",
               "metadata": {
-                "description": "Specifies the Azure location where the key vault should be created."
+                "description": "Specifies the Azure location where the resource should be created."
               },
               "defaultValue": "[resourceGroup().location]"
             },
@@ -376,7 +383,7 @@
             "location": {
               "type": "string",
               "metadata": {
-                "description": "Specifies the Azure location where the key vault should be created."
+                "description": "Specifies the Azure location where the resource should be created."
               },
               "defaultValue": "[resourceGroup().location]"
             },
@@ -574,7 +581,7 @@
             "location": {
               "type": "string",
               "metadata": {
-                "description": "Specifies the Azure location where the key vault should be created."
+                "description": "Specifies the Azure location where the resource should be created."
               },
               "defaultValue": "[resourceGroup().location]"
             },
@@ -1020,7 +1027,7 @@
             "location": {
               "type": "string",
               "metadata": {
-                "description": "Specifies the Azure location where the key vault should be created."
+                "description": "Specifies the Azure location where the resource should be created."
               },
               "defaultValue": "[resourceGroup().location]"
             },
@@ -1310,7 +1317,7 @@
             "location": {
               "type": "string",
               "metadata": {
-                "description": "Specifies the Azure location where the key vault should be created."
+                "description": "Specifies the Azure location where the resource should be created."
               },
               "defaultValue": "[resourceGroup().location]"
             },
@@ -1786,7 +1793,13 @@
                 "[resourceId('Microsoft.Storage/storageAccounts', variables('storagename'))]"
               ]
             }
-          ]
+          ],
+          "outputs": {
+            "PwrOps": {
+              "type": "string",
+              "value": "A towel, 'The Hitchhiker's Guide to the Galaxy' says, is about the most massively useful thing an interstellar hitchhiker can have"
+            }
+          }
         }
       },
       "dependsOn": [
@@ -1808,6 +1821,9 @@
           "vnetname": {
             "value": "[variables('onpremvnetname')]"
           },
+          "location": {
+            "value": "[parameters('location')]"
+          },
           "addressprefix": {
             "value": "[parameters('onpremaddressprefix')]"
           },
@@ -1816,6 +1832,12 @@
           },
           "bastionsubnetprefix": {
             "value": "[parameters('onprembastionsubnetprefix')]"
+          },
+          "gatewaysubnetprefix": {
+            "value": "[parameters('onpremvpngatewaysubnetprefix')]"
+          },
+          "firewallsubnetprefix": {
+            "value": "[parameters('onpremfirewallsubnetprefix')]"
           },
           "servernsgid": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-onprem-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'onpremservernsgdeploy'), '2019-10-01').outputs.id.value]"
@@ -1834,7 +1856,7 @@
             "location": {
               "type": "string",
               "metadata": {
-                "description": "Specifies the Azure location where the key vault should be created."
+                "description": "Specifies the Azure location where the resource should be created."
               },
               "defaultValue": "[resourceGroup().location]"
             },
@@ -2360,7 +2382,13 @@
                 "[resourceId('Microsoft.Storage/storageAccounts', variables('storagename'))]"
               ]
             }
-          ]
+          ],
+          "outputs": {
+            "PwrOps": {
+              "type": "string",
+              "value": "A towel, 'The Hitchhiker's Guide to the Galaxy' says, is about the most massively useful thing an interstellar hitchhiker can have"
+            }
+          }
         }
       },
       "dependsOn": [
@@ -2399,7 +2427,7 @@
             "location": {
               "type": "string",
               "metadata": {
-                "description": "Specifies the Azure location where the VM should be created."
+                "description": "Specifies the Azure location where the resource should be created."
               },
               "defaultValue": "[resourceGroup().location]"
             },

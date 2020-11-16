@@ -76,6 +76,12 @@ param onpremvpngatewaysubnetprefix string {
     description: 'Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet'
   }
 }
+param onpremfirewallsubnetprefix string {
+  default: '10.20.0.192/26'
+  metadata: {
+    description: 'Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet'
+  }
+}
 param psk string {
   secure:true
   metadata: {
@@ -363,9 +369,12 @@ module onpremvnet './HubVNet.bicep' = {
   scope: resourceGroup(onpremrg.name)
   params: {
     vnetname: onpremvnetname
+    location: location
     addressprefix: onpremaddressprefix
     serversubnetprefix: onpremserversubnetprefix
     bastionsubnetprefix: onprembastionsubnetprefix
+    gatewaysubnetprefix: onpremvpngatewaysubnetprefix
+    firewallsubnetprefix: onpremfirewallsubnetprefix
     servernsgid: onpremservernsg.outputs.id
     bastionnsgid: onprembastionnsg.outputs.id
     dnsservers: firewall.outputs.privateip
