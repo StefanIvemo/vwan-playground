@@ -171,7 +171,7 @@ module fwpolicy './FwPolicy.bicep' = {
   name: 'fwpolicydeploy'
   scope: resourceGroup(wanrg.name)
   params: {
-    fwpolicyname: fwpolicyname
+    policyname: fwpolicyname
     location: location
   }
 }
@@ -180,11 +180,8 @@ module rcgroupplatform './FwPolicyPlatformRCG.bicep' = {
   name: 'rcgroupplatformdeploy'
   scope: resourceGroup(wanrg.name)
   params: {
-    fwpolicyname: fwpolicyname
+    fwpolicyname: fwpolicy.outputs.fwpolicyname
   }
-  dependsOn:[
-    fwpolicy
-  ]
 }
 
 module loganlytics './LogAnalytics.bicep' = {

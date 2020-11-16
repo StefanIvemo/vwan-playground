@@ -1,7 +1,7 @@
 #This script removes all components of the Virtual WAN Playground in the correct order.
 param(
-  $subscriptionID='',
-  $rgName='',
+  $subscriptionID='95695240-9cfc-444f-8dcb-a7e45ce85aa2',
+  $rgNames=@("contoso-global-vwan-rg", "contoso-mgmt-rg", "contoso-spoke1-rg"),
   $cleanuptemplate='.\cleanup.json'
 )
 
@@ -16,6 +16,12 @@ if ((az account list) -eq "[]") {
   az account set --subscription $subscriptionID
 }
 
-az deployment group create --resource-group $rgName --template-file $cleanuptemplate --mode Complete
+$rgNames | ForEach-Object -Parallel {
+  az deployment group create --resource-group $_ --template-file $using:cleanuptemplate --mode Complete
+  Write-Host "Started cleanup deployment on scope: $_, sit back and relax!"
+}
 
-Write-Host "Started empty deployment on target Resource Group $rgName"
+$rgNames | ForEach-Object -Parallel {
+  az group delete --resource-group $_
+  Write-Host "Removing resource group $_"
+}
