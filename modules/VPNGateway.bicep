@@ -29,7 +29,7 @@ resource hubvpngw 'Microsoft.Network/vpnGateways@2020-06-01' = {
   }     
 }
 
-output hubvpngwip string = hubvpngw.properties.ipConfigurations[0].publicIpAddress
+output gwip string = hubvpngw.properties.ipConfigurations[0].publicIpAddress
 
 
 

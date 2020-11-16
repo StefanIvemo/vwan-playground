@@ -162,7 +162,7 @@ module hub './VirtualHub.bicep' = {
   params: {
     hubname: hubname
     location: location
-    wanid: wan.outputs.wanid
+    wanid: wan.outputs.id
     hubaddressprefix: hubaddressprefix
   }
 }
@@ -180,7 +180,7 @@ module rcgroupplatform './FwPolicyPlatformRCG.bicep' = {
   name: 'rcgroupplatformdeploy'
   scope: resourceGroup(wanrg.name)
   params: {
-    fwpolicyname: fwpolicy.outputs.fwpolicyname
+    fwpolicyname: fwpolicy.name
   }
 }
 
@@ -200,8 +200,8 @@ module firewall './AzureFirewall.bicep' = {
     fwname: fwname
     location: location
     fwpublicipcount: 3
-    fwpolicyid: fwpolicy.outputs.fwpolicyid
-    hubid: hub.outputs.hubid
+    fwpolicyid: fwpolicy.outputs.id
+    hubid: hub.outputs.id
   }
 }
 
@@ -209,13 +209,10 @@ module firewalldiag './FwDiagnostics.bicep' = {
   name: 'firewalldiagdeploy'
   scope: resourceGroup(wanrg.name)
   params: {
-    fwname: fwname
+    fwname: firewall.outputs.name
     location: location
-    loganalyticsid: loganlytics.outputs.loganlyticsid
+    loganalyticsid: loganlytics.outputs.id
   }
-  dependsOn:[
-    firewall
-  ]
 }
 
 module defaulthubroutetable './VirtualHubRouteTable.bicep' = {
@@ -234,7 +231,7 @@ module defaulthubroutetable './VirtualHubRouteTable.bicep' = {
               regionaladdressspace
           ]
           nextHopType: 'ResourceId'
-          nextHop: firewall.outputs.firewallid
+          nextHop: firewall.outputs.id
       }
     ]
     }
@@ -257,7 +254,7 @@ module vnethubroutetable './VirtualHubRouteTable.bicep' = {
                 '0.0.0.0/0'
             ]
             nextHopType: 'ResourceId'
-            nextHop: firewall.outputs.firewallid
+            nextHop: firewall.outputs.id
         }
     ]
     }
@@ -270,7 +267,7 @@ module hubvpngw './VPNGateway.bicep' = {
   params: {
     hubvpngwname: hubvpngwname
     location: location
-    hubid: hub.outputs.hubid
+    hubid: hub.outputs.id
   }
 }
 
@@ -300,13 +297,11 @@ module spokevnet './VNet.bicep' = {
     addressprefix: '10.0.1.0/24'
     serversubnetprefix: '10.0.1.0/26'
     bastionsubnetprefix: '10.0.1.64/26'
-    servernsgid: spokeservernsg.outputs.nsgid
-    bastionnsgid: spokebasionnsg.outputs.nsgid
-    dnsservers: firewall.outputs.fwprivateip
+    servernsgid: spokeservernsg.outputs.id
+    bastionnsgid: spokebasionnsg.outputs.id
+    dnsservers: firewall.outputs.privateip
   }
 }
-
-
 
 module hubvnetconnection './VirtualHubVNetConnection.bicep' = {
   name: 'hubvnetconnectiondeploy'
@@ -314,8 +309,8 @@ module hubvnetconnection './VirtualHubVNetConnection.bicep' = {
   params: {
     hubname: hubname
     spokeconnectionname: spokeconnectionname
-    spokevnetid: spokevnet.outputs.vnetid
-    vnetroutetableid: vnethubroutetable.outputs.routetableid
+    spokevnetid: spokevnet.outputs.id
+    vnetroutetableid: vnethubroutetable.outputs.id
   }
 }
 

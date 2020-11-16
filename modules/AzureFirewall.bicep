@@ -48,5 +48,6 @@ resource firewall 'Microsoft.Network/azureFirewalls@2020-06-01' = {
   }
 } 
 
-output firewallid string = firewall.id
-output fwprivateip string = firewall.properties.hubIPAddresses.privateIPAddress
+output name string = firewall.name
+output id string = firewall.id
+output privateip string = firewall.properties.hubIPAddresses.privateIPAddress

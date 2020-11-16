@@ -32,4 +32,4 @@ resource wan 'Microsoft.Network/virtualWans@2020-06-01' = {
     }
 }
 
-output wanid string = wan.id
+output id string = wan.id

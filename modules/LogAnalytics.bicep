@@ -18,4 +18,4 @@ resource loganalytics 'Microsoft.OperationalInsights/workspaces@2020-08-01' = {
   }
 }
 
-output loganlyticsid string = loganalytics.id
+output id string = loganalytics.id

@@ -81,6 +81,6 @@ resource vnet 'Microsoft.Network/virtualNetworks@2020-05-01' = {
   }
 }
 
-output vnetid string = vnet.id
+output id string = vnet.id
 output serversubnetid string = '${vnet.id}/subnets/snet-servers'
 output bastionsubnetid string = '${vnet.id}/subnets/AzureBastionSubnet'

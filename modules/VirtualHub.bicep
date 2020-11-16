@@ -32,4 +32,4 @@ resource hub 'Microsoft.Network/virtualHubs@2020-06-01' = {
     }    
 }
 
-output hubid string = hub.id
+output id string = hub.id

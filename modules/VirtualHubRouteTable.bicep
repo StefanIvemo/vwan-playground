@@ -29,4 +29,4 @@ resource hubroutetable 'Microsoft.Network/virtualHubs/hubRouteTables@2020-06-01'
   } 
 }
 
-output routetableid string = hubroutetable.id
+output id string = hubroutetable.id

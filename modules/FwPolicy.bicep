@@ -30,5 +30,5 @@ resource policy 'Microsoft.Network/firewallPolicies@2020-06-01' = {
   }
 }
 
-output fwpolicyname string = policy.name
-output fwpolicyid string = policy.id
+output name string = policy.name
+output id string = policy.id

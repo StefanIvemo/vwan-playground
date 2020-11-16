@@ -100,4 +100,4 @@ resource bastionnsg 'Microsoft.Network/networkSecurityGroups@2020-06-01' = {
   }
 }
 
-output nsgid string = bastionnsg.id
+output id string = bastionnsg.id
