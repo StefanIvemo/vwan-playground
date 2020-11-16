@@ -33,3 +33,4 @@ resource hub 'Microsoft.Network/virtualHubs@2020-06-01' = {
 }
 
 output id string = hub.id
+output name string = hub.name

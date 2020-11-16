@@ -132,6 +132,22 @@ var spokevmname = 'spoke1-vm01'
 var spokenicname =  '${spokevmname}-nic'
 var spokediskname =  '${spokevmname}-OSDisk'
 
+/*Variables for "On-Prem" VNet and VM */
+var onpremvnetname = 'onprem-vnet'
+var onprembastionname = '${onpremvnetname}-bastion'
+var onprembastionnsgname = '${onpremvnetname}-AzureBastionSubnet-nsg'
+var onpremservernsgname = '${onpremvnetname}-snet-servers-nsg'
+var onprembastionipname = '${onprembastionname}-pip'
+var onpremvmname = 'onprem-vm01'
+var onpremnicname =  '${onpremvmname}-nic'
+var onpremdiskname =  '${onpremvmname}-OSDisk'
+var onpremvpngwname = '${onpremvnetname}-vpn-vgw'
+var onpremvpngwpipname = '${onpremvpngwname}-pip'
+var onprems2saddressprefixes = [
+  hubaddressprefix 
+  spokeaddressprefix
+]
+
 resource wanrg 'Microsoft.Resources/resourceGroups@2020-06-01' = {
   name: '${nameprefix}-global-vwan-rg'
   location: location
@@ -143,6 +159,10 @@ resource logsrg 'Microsoft.Resources/resourceGroups@2020-06-01' = {
 }
 resource spokerg 'Microsoft.Resources/resourceGroups@2020-06-01' = {
   name: '${nameprefix}-spoke1-rg'
+  location: location
+}
+resource onpremrg 'Microsoft.Resources/resourceGroups@2020-06-01' = {
+  name: '${nameprefix}-onprem-rg'
   location: location
 }
 
@@ -261,7 +281,7 @@ module vnethubroutetable './VirtualHubRouteTable.bicep' = {
   }
 }
 
-module hubvpngw './VPNGateway.bicep' = {
+module hubvpngw './VirtualHubVPNGateway.bicep' = {
   name: 'hubvpngwdeploy'
   scope: resourceGroup(wanrg.name)
   params: {
@@ -276,11 +296,11 @@ module spokeservernsg './NSGDefaultRules.bicep' = {
   scope: resourceGroup(spokerg.name)
   params: {
     nsgname: spokeservernsgname
-
+    location: location
   }
 }
 
-module spokebasionnsg './NSGBastion.bicep' = {
+module spokebastionnsg './NSGBastion.bicep' = {
   name: 'spokebastionnsgdeploy'
   scope: resourceGroup(spokerg.name)
   params: {
@@ -289,16 +309,16 @@ module spokebasionnsg './NSGBastion.bicep' = {
   }
 }
 
-module spokevnet './VNet.bicep' = {
+module spokevnet './SpokeVNet.bicep' = {
   name: 'spokevnetdeploy'
   scope: resourceGroup(spokerg.name)
   params: {
     vnetname: spokevnetname
-    addressprefix: '10.0.1.0/24'
-    serversubnetprefix: '10.0.1.0/26'
-    bastionsubnetprefix: '10.0.1.64/26'
+    addressprefix: spokeaddressprefix
+    serversubnetprefix: spokeserversubnetprefix
+    bastionsubnetprefix: spokebastionsubnetprefix
     servernsgid: spokeservernsg.outputs.id
-    bastionnsgid: spokebasionnsg.outputs.id
+    bastionnsgid: spokebastionnsg.outputs.id
     dnsservers: firewall.outputs.privateip
   }
 }
@@ -335,5 +355,99 @@ module spoekvm './WindowsVM.bicep' = {
     adminusername: adminusername
     adminpassword: adminpassword
     subnetref: spokevnet.outputs.serversubnetid
+  }
+}
+
+module onpremvnet './HubVNet.bicep' = {
+  name: 'onpremvnetdeploy'
+  scope: resourceGroup(onpremrg.name)
+  params: {
+    vnetname: onpremvnetname
+    addressprefix: onpremaddressprefix
+    serversubnetprefix: onpremserversubnetprefix
+    bastionsubnetprefix: onprembastionsubnetprefix
+    servernsgid: onpremservernsg.outputs.id
+    bastionnsgid: onprembastionnsg.outputs.id
+    dnsservers: firewall.outputs.privateip
+  }
+}
+
+module onpremservernsg './NSGDefaultRules.bicep' = {
+  name: 'onpremservernsgdeploy'
+  scope: resourceGroup(onpremrg.name)
+  params: {
+    nsgname: onpremservernsgname
+    location: location
+  }
+}
+
+module onprembastionnsg './NSGBastion.bicep' = {
+  name: 'onprembastionnsgdeploy'
+  scope: resourceGroup(onpremrg.name)
+  params: {
+    nsgname: onprembastionnsgname
+    location: location
+  }
+}
+
+module onpremvm './WindowsVM.bicep' = {
+  name: 'onpremvmdeploy'
+  scope: resourceGroup(onpremrg.name)
+  params: {
+    vmname: onpremvmname
+    location: location
+    diskname: onpremdiskname
+    nicname: onpremnicname    
+    adminusername: adminusername
+    adminpassword: adminpassword
+    subnetref: onpremvnet.outputs.serversubnetid
+  }
+}
+
+module onpremvpngw './VNetVPNGateway.bicep' = {
+  name: 'onpremvpngwdeploy'
+  scope: resourceGroup(onpremrg.name)
+  params: {
+    vpngwname: onpremvpngwname
+    vpngwpipname: onpremvpngwpipname
+    location: location
+    subnetref: onpremvnet.outputs.gatewaysubnetid    
+  } 
+}
+
+module wanvpnsite './VirtualWANVPNSite.bicep' = {
+  name: 'wanvpnsitedeploy'
+  scope: resourceGroup(wanrg.name)
+  params: {
+    vpnsitename: onpremvpnsitename
+    location: location
+    addressprefix: onpremaddressprefix
+    bgppeeringpddress: onpremvpngw.outputs.bgpaddress
+    ipaddress: onpremvpngw.outputs.ip
+    wanid: wan.outputs.id
+  }
+}
+
+module hubvpnconnection './VirtualHubVPNConnection.bicep' = {
+  name: 'hubvpnconnectiondeploy'
+  scope: resourceGroup(wanrg.name)
+  params:{
+    hubvpngwname: hub.outputs.name
+    psk: psk
+    vpnsiteid: wanvpnsite.outputs.id
+  }
+}
+
+module hubtoonprems2s './VNetVPNSiteToSite.bicep' = {
+  name: 'hubtoonprems2sdeploy'
+  scope: resourceGroup(onpremrg.name)
+  params:{
+    localnetworkgwname: 'onprem-to-vhub-cn'
+    location: location
+    vpngwid: onpremvpngw.outputs.id
+    gwipaddress: hubvpngw.outputs.gwpublicip
+    bgppeeringpddress: hubvpngw.outputs.gwprivateip
+    addressprefixes: onprems2saddressprefixes
+    psk: psk
   }
 }
