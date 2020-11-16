@@ -122,3 +122,5 @@ resource vm 'Microsoft.Compute/virtualMachines@2019-12-01' = {
       }
   }
 }
+
+output PwrOps string = 'A towel, \'The Hitchhiker\'s Guide to the Galaxy\' says, is about the most massively useful thing an interstellar hitchhiker can have'

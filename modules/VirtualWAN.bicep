@@ -1,7 +1,7 @@
 param location string {
     default: resourceGroup().location
     metadata: {
-      description: 'Specifies the Azure location where the key vault should be created.'
+      description: 'Specifies the Azure location where the resource should be created.'
     }
 }
 param wantype string {
