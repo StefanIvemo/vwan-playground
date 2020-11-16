@@ -22,6 +22,95 @@ param wantype string {
     description: 'Specifies the type of Virtual WAN.'
   }
 }
+param regionaladdressspace string {
+  default: '10.0.0.0/16'
+  metadata: {
+    description: 'Specifies the CIDR that contains all address spaces used in Azure, should cover the VWAN Hub and all attached VNet Spokes. Used for routing.'
+  }
+}
+param hubaddressprefix string {
+  default: '10.0.0.0/24'
+  metadata: {
+    description: 'Specifies the Virtual Hub Address Prefix.'
+  }
+}
+param spokeaddressprefix string {
+  default: '10.0.1.0/24'
+  metadata: {
+    description: 'Specify the address prefix to use for the spoke VNet'
+  }
+}
+param spokeserversubnetprefix string {
+  default: '10.0.1.0/26'
+  metadata: {
+    description: 'Specify the address prefix to use for server subnet in the spoke VNet'
+  }
+}
+param spokebastionsubnetprefix string {
+  default: '10.0.1.64/26'
+  metadata: {
+    description: 'Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet'
+  }
+}
+param onpremaddressprefix string {
+  default: '10.20.0.0/24'
+  metadata: {
+    description: 'Specify the address prefix to use for the spoke VNet'
+  }
+}
+param onpremserversubnetprefix string {
+  default: '10.20.0.0/26'
+  metadata: {
+    description: 'Specify the address prefix to use for server subnet in the spoke VNet'
+  }
+}
+param onprembastionsubnetprefix string {
+  default: '10.20.0.64/26'
+  metadata: {
+    description: 'Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet'
+  }
+}
+param onpremvpngatewaysubnetprefix string {
+  default: '10.20.0.128/26'
+  metadata: {
+    description: 'Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet'
+  }
+}
+param psk string {
+  secure:true
+  metadata: {
+      'description': 'PSK to use for the site to site tunnel between Virtual Hub and On-Prem VNet' 
+  }
+}
+param adminusername string {
+  default :'sysadmin'
+  metadata: {
+      'description': 'The local admin user name for the deployed servers' 
+  }
+}
+
+param adminpassword string {
+  secure:true
+  metadata: {
+      'description': 'The local admin password' 
+  }
+}
+param windowsosversion string {
+  default :'2019-Datacenter'
+  allowed : [        
+      '2016-Datacenter'
+      '2019-Datacenter'
+    ]
+    metadata: {
+      'description': 'The Windows version for the VM. This will pick a fully patched image of this given Windows version.' 
+    }
+}
+param vmsize string {
+  default: 'Standard_D2_v3'
+  metadata: {
+    description: 'Size of the virtual machine.'
+  }
+}
 
 /*Variables for VWAN */
 var wanname = '${nameprefix}-vwan'
@@ -42,13 +131,6 @@ var spokebastionipname = '${spokebastionname}-pip'
 var spokevmname = 'spoke1-vm01'
 var spokenicname =  '${spokevmname}-nic'
 var spokediskname =  '${spokevmname}-OSDisk'
-
-param hubaddressprefix string {
-  default: '10.0.0.0/24'
-  metadata: {
-    description: 'Specifies the Virtual Hub Address Prefix.'
-  }
-}
 
 resource wanrg 'Microsoft.Resources/resourceGroups@2020-06-01' = {
   name: '${nameprefix}-global-vwan-rg'
@@ -100,6 +182,9 @@ module rcgroupplatform './FwPolicyPlatformRCG.bicep' = {
   params: {
     fwpolicyname: fwpolicyname
   }
+  dependsOn:[
+    fwpolicy
+  ]
 }
 
 module loganlytics './LogAnalytics.bicep' = {
@@ -120,7 +205,6 @@ module firewall './AzureFirewall.bicep' = {
     fwpublicipcount: 3
     fwpolicyid: fwpolicy.outputs.fwpolicyid
     hubid: hub.outputs.hubid
-    hubaddressprefix: hubaddressprefix
   }
 }
 
@@ -132,47 +216,31 @@ module firewalldiag './FwDiagnostics.bicep' = {
     location: location
     loganalyticsid: loganlytics.outputs.loganlyticsid
   }
+  dependsOn:[
+    firewall
+  ]
 }
 
-module hubvpngw './VPNGateway.bicep' = {
-  name: 'hubvpngwdeploy'
+module defaulthubroutetable './VirtualHubRouteTable.bicep' = {
+  name: 'defaulthubroutetabledeploy'
   scope: resourceGroup(wanrg.name)
-  params: {
-    hubvpngwname: hubvpngwname
-    location: location
-    hubid: hub.outputs.hubid
-  }
-}
-
-module spokeservernsg './NSGDefaultRules.bicep' = {
-  name: 'spokensgdeploy'
-  scope: resourceGroup(spokerg.name)
-  params: {
-    nsgname: spokeservernsgname
-
-  }
-}
-
-module spokebasionnsg './NSGBastion.bicep' = {
-  name: 'spokensgdeploy'
-  scope: resourceGroup(spokerg.name)
-  params: {
-    nsgname: spokebastionnsgname
-    location: location
-  }
-}
-
-module spokevnet './VNet.bicep' = {
-  name: 'spokevnetdeploy'
-  scope: resourceGroup(spokerg.name)
-  params: {
-    vnetname: spokevnetname
-    addressprefix: '10.0.1.0/24'
-    serversubnetprefix: '10.0.1.0/26'
-    bastionsubnetprefix: '10.0.1.64/26'
-    servernsgid: spokeservernsg.outputs.nsgid
-    bastionnsgid: spokebasionnsg.outputs.nsgid
-    dnsservers: firewall.outputs.fwprivateip
+  params:{
+    hubname: hubname
+    routetablename: 'defaultRouteTable'
+    routetabellabels: 'default'
+    routes:{
+      routes: [
+        {
+          name: 'toFirewall'
+          destinationType: 'CIDR'
+          destinations: [
+              regionaladdressspace
+          ]
+          nextHopType: 'ResourceId'
+          nextHop: firewall.outputs.firewallid
+      }
+    ]
+    }
   }
 }
 
@@ -199,6 +267,50 @@ module vnethubroutetable './VirtualHubRouteTable.bicep' = {
   }
 }
 
+module hubvpngw './VPNGateway.bicep' = {
+  name: 'hubvpngwdeploy'
+  scope: resourceGroup(wanrg.name)
+  params: {
+    hubvpngwname: hubvpngwname
+    location: location
+    hubid: hub.outputs.hubid
+  }
+}
+
+module spokeservernsg './NSGDefaultRules.bicep' = {
+  name: 'spokeservernsgdeploy'
+  scope: resourceGroup(spokerg.name)
+  params: {
+    nsgname: spokeservernsgname
+
+  }
+}
+
+module spokebasionnsg './NSGBastion.bicep' = {
+  name: 'spokebastionnsgdeploy'
+  scope: resourceGroup(spokerg.name)
+  params: {
+    nsgname: spokebastionnsgname
+    location: location
+  }
+}
+
+module spokevnet './VNet.bicep' = {
+  name: 'spokevnetdeploy'
+  scope: resourceGroup(spokerg.name)
+  params: {
+    vnetname: spokevnetname
+    addressprefix: '10.0.1.0/24'
+    serversubnetprefix: '10.0.1.0/26'
+    bastionsubnetprefix: '10.0.1.64/26'
+    servernsgid: spokeservernsg.outputs.nsgid
+    bastionnsgid: spokebasionnsg.outputs.nsgid
+    dnsservers: firewall.outputs.fwprivateip
+  }
+}
+
+
+
 module hubvnetconnection './VirtualHubVNetConnection.bicep' = {
   name: 'hubvnetconnectiondeploy'
   scope: resourceGroup(wanrg.name)
@@ -207,5 +319,29 @@ module hubvnetconnection './VirtualHubVNetConnection.bicep' = {
     spokeconnectionname: spokeconnectionname
     spokevnetid: spokevnet.outputs.vnetid
     vnetroutetableid: vnethubroutetable.outputs.routetableid
+  }
+}
+
+module spokebastion './Bastion.bicep' = {
+  name: 'spokebastiondeploy'
+  scope: resourceGroup(spokerg.name)
+  params: {
+    bastionname: spokebastionname
+    location: location
+    bastionsubnetref: spokevnet.outputs.bastionsubnetid
+  }
+}
+
+module spoekvm './WindowsVM.bicep' = {
+  name: 'spokevmdeploy'
+  scope: resourceGroup(spokerg.name)
+  params: {
+    vmname: spokevmname
+    location: location
+    diskname: spokediskname
+    nicname: spokenicname    
+    adminusername: adminusername
+    adminpassword: adminpassword
+    subnetref: spokevnet.outputs.serversubnetid
   }
 }

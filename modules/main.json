@@ -27,12 +27,105 @@
         "Basic"
       ]
     },
+    "regionaladdressspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the CIDR that contains all address spaces used in Azure, should cover the VWAN Hub and all attached VNet Spokes. Used for routing."
+      },
+      "defaultValue": "10.0.0.0/16"
+    },
     "hubaddressprefix": {
       "type": "string",
       "metadata": {
         "description": "Specifies the Virtual Hub Address Prefix."
       },
       "defaultValue": "10.0.0.0/24"
+    },
+    "spokeaddressprefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Specify the address prefix to use for the spoke VNet"
+      },
+      "defaultValue": "10.0.1.0/24"
+    },
+    "spokeserversubnetprefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Specify the address prefix to use for server subnet in the spoke VNet"
+      },
+      "defaultValue": "10.0.1.0/26"
+    },
+    "spokebastionsubnetprefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet"
+      },
+      "defaultValue": "10.0.1.64/26"
+    },
+    "onpremaddressprefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Specify the address prefix to use for the spoke VNet"
+      },
+      "defaultValue": "10.20.0.0/24"
+    },
+    "onpremserversubnetprefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Specify the address prefix to use for server subnet in the spoke VNet"
+      },
+      "defaultValue": "10.20.0.0/26"
+    },
+    "onprembastionsubnetprefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet"
+      },
+      "defaultValue": "10.20.0.64/26"
+    },
+    "onpremvpngatewaysubnetprefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet"
+      },
+      "defaultValue": "10.20.0.128/26"
+    },
+    "psk": {
+      "type": "secureString",
+      "metadata": {
+        "description": "PSK to use for the site to site tunnel between Virtual Hub and On-Prem VNet"
+      }
+    },
+    "adminusername": {
+      "type": "string",
+      "metadata": {
+        "description": "The local admin user name for the deployed servers"
+      },
+      "defaultValue": "sysadmin"
+    },
+    "adminpassword": {
+      "type": "secureString",
+      "metadata": {
+        "description": "The local admin password"
+      }
+    },
+    "windowsosversion": {
+      "type": "string",
+      "metadata": {
+        "description": "The Windows version for the VM. This will pick a fully patched image of this given Windows version."
+      },
+      "defaultValue": "2019-Datacenter",
+      "allowedValues": [
+        "2016-Datacenter",
+        "2019-Datacenter"
+      ]
+    },
+    "vmsize": {
+      "type": "string",
+      "metadata": {
+        "description": "Size of the virtual machine."
+      },
+      "defaultValue": "Standard_D2_v3"
     }
   },
   "functions": [],
@@ -424,6 +517,7 @@
         }
       },
       "dependsOn": [
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-global-vwan-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'fwpolicydeploy')]",
         "[subscriptionResourceId('Microsoft.Resources/resourceGroups', format('{0}-global-vwan-rg', parameters('nameprefix')))]"
       ]
     },
@@ -514,9 +608,6 @@
           },
           "hubid": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-global-vwan-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'vhubdeploy'), '2019-10-01').outputs.hubid.value]"
-          },
-          "hubaddressprefix": {
-            "value": "[parameters('hubaddressprefix')]"
           }
         },
         "template": {
@@ -526,22 +617,15 @@
             "location": {
               "type": "string",
               "metadata": {
-                "description": "Specifies the Azure location where the key vault should be created."
+                "description": "Specifies the Azure location where the Azure Firewall should be created."
               },
               "defaultValue": "[resourceGroup().location]"
             },
             "fwname": {
               "type": "string",
               "metadata": {
-                "description": "Specifies the namine to use for the Virtual WAN resources."
+                "description": "Specifies the name to use for the Azure Firewall resources."
               }
-            },
-            "hubaddressprefix": {
-              "type": "string",
-              "metadata": {
-                "description": "Specifies the Virtual Hub Address Prefix."
-              },
-              "defaultValue": "10.0.0.0/24"
             },
             "hubid": {
               "type": "string",
@@ -558,7 +642,7 @@
             "fwpublicipcount": {
               "type": "int",
               "metadata": {
-                "description": "Virtual Hub Resource ID"
+                "description": "Specifies the number of public IPs to allocate to the firewall"
               },
               "defaultValue": 2
             }
@@ -635,14 +719,14 @@
             "location": {
               "type": "string",
               "metadata": {
-                "description": "Specifies the Azure location where the key vault should be created."
+                "description": "Specifies the Azure location where the resource should be created."
               },
               "defaultValue": "[resourceGroup().location]"
             },
             "fwname": {
               "type": "string",
               "metadata": {
-                "description": "Specifies the name to use for the Azure Firewall resources."
+                "description": "Specifies the name of the Azure Firewall resources."
               }
             },
             "loganalyticsid": {
@@ -687,7 +771,192 @@
         }
       },
       "dependsOn": [
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-global-vwan-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'firewalldeploy')]",
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-mgmt-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'loganalyticsdeploy')]",
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', format('{0}-global-vwan-rg', parameters('nameprefix')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "defaulthubroutetabledeploy",
+      "resourceGroup": "[format('{0}-global-vwan-rg', parameters('nameprefix'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "hubname": {
+            "value": "[variables('hubname')]"
+          },
+          "routetablename": {
+            "value": "defaultRouteTable"
+          },
+          "routetabellabels": {
+            "value": "default"
+          },
+          "routes": {
+            "value": {
+              "routes": [
+                {
+                  "name": "toFirewall",
+                  "destinationType": "CIDR",
+                  "destinations": [
+                    "[parameters('regionaladdressspace')]"
+                  ],
+                  "nextHopType": "ResourceId",
+                  "nextHop": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-global-vwan-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'firewalldeploy'), '2019-10-01').outputs.firewallid.value]"
+                }
+              ]
+            }
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {
+            "hubname": {
+              "type": "string",
+              "metadata": {
+                "description": "Specifies the name of the Virtual Hub resources to add a route table to."
+              }
+            },
+            "routetablename": {
+              "type": "string",
+              "metadata": {
+                "description": "Specifies the name to use for the Virtual Hub Route table resources."
+              }
+            },
+            "routes": {
+              "type": "object",
+              "metadata": {
+                "description": "Specifies the name custom routes to add to the route table"
+              }
+            },
+            "routetabellabels": {
+              "type": "string",
+              "metadata": {
+                "description": "Specifies the labels that the hub route table will use"
+              }
+            }
+          },
+          "functions": [],
+          "resources": [
+            {
+              "type": "Microsoft.Network/virtualHubs/hubRouteTables",
+              "apiVersion": "2020-06-01",
+              "name": "[format('{0}/{1}', parameters('hubname'), parameters('routetablename'))]",
+              "properties": {
+                "routes": "[parameters('routes').routes]",
+                "labels": [
+                  "[parameters('routetabellabels')]"
+                ]
+              }
+            }
+          ],
+          "outputs": {
+            "routetableid": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/virtualHubs/hubRouteTables', split(format('{0}/{1}', parameters('hubname'), parameters('routetablename')), '/')[0], split(format('{0}/{1}', parameters('hubname'), parameters('routetablename')), '/')[1])]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-global-vwan-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'firewalldeploy')]",
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', format('{0}-global-vwan-rg', parameters('nameprefix')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "vnethubroutetabledeploy",
+      "resourceGroup": "[format('{0}-global-vwan-rg', parameters('nameprefix'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "hubname": {
+            "value": "[variables('hubname')]"
+          },
+          "routetablename": {
+            "value": "RT_VNet"
+          },
+          "routetabellabels": {
+            "value": "VNet"
+          },
+          "routes": {
+            "value": {
+              "routes": [
+                {
+                  "name": "toFirewall",
+                  "destinationType": "CIDR",
+                  "destinations": [
+                    "0.0.0.0/0"
+                  ],
+                  "nextHopType": "ResourceId",
+                  "nextHop": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-global-vwan-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'firewalldeploy'), '2019-10-01').outputs.firewallid.value]"
+                }
+              ]
+            }
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {
+            "hubname": {
+              "type": "string",
+              "metadata": {
+                "description": "Specifies the name of the Virtual Hub resources to add a route table to."
+              }
+            },
+            "routetablename": {
+              "type": "string",
+              "metadata": {
+                "description": "Specifies the name to use for the Virtual Hub Route table resources."
+              }
+            },
+            "routes": {
+              "type": "object",
+              "metadata": {
+                "description": "Specifies the name custom routes to add to the route table"
+              }
+            },
+            "routetabellabels": {
+              "type": "string",
+              "metadata": {
+                "description": "Specifies the labels that the hub route table will use"
+              }
+            }
+          },
+          "functions": [],
+          "resources": [
+            {
+              "type": "Microsoft.Network/virtualHubs/hubRouteTables",
+              "apiVersion": "2020-06-01",
+              "name": "[format('{0}/{1}', parameters('hubname'), parameters('routetablename'))]",
+              "properties": {
+                "routes": "[parameters('routes').routes]",
+                "labels": [
+                  "[parameters('routetabellabels')]"
+                ]
+              }
+            }
+          ],
+          "outputs": {
+            "routetableid": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/virtualHubs/hubRouteTables', split(format('{0}/{1}', parameters('hubname'), parameters('routetablename')), '/')[0], split(format('{0}/{1}', parameters('hubname'), parameters('routetablename')), '/')[1])]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-global-vwan-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'firewalldeploy')]",
         "[subscriptionResourceId('Microsoft.Resources/resourceGroups', format('{0}-global-vwan-rg', parameters('nameprefix')))]"
       ]
     },
@@ -769,7 +1038,7 @@
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2019-10-01",
-      "name": "spokensgdeploy",
+      "name": "spokeservernsgdeploy",
       "resourceGroup": "[format('{0}-spoke1-rg', parameters('nameprefix'))]",
       "properties": {
         "expressionEvaluationOptions": {
@@ -823,7 +1092,7 @@
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2019-10-01",
-      "name": "spokensgdeploy",
+      "name": "spokebastionnsgdeploy",
       "resourceGroup": "[format('{0}-spoke1-rg', parameters('nameprefix'))]",
       "properties": {
         "expressionEvaluationOptions": {
@@ -986,10 +1255,10 @@
             "value": "10.0.1.64/26"
           },
           "servernsgid": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-spoke1-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'spokensgdeploy'), '2019-10-01').outputs.nsgid.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-spoke1-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'spokeservernsgdeploy'), '2019-10-01').outputs.nsgid.value]"
           },
           "bastionnsgid": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-spoke1-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'spokensgdeploy'), '2019-10-01').outputs.nsgid.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-spoke1-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'spokebastionnsgdeploy'), '2019-10-01').outputs.nsgid.value]"
           },
           "dnsservers": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-global-vwan-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'firewalldeploy'), '2019-10-01').outputs.fwprivateip.value]"
@@ -1111,101 +1380,9 @@
       },
       "dependsOn": [
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-global-vwan-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'firewalldeploy')]",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-spoke1-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'spokensgdeploy')]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-spoke1-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'spokebastionnsgdeploy')]",
         "[subscriptionResourceId('Microsoft.Resources/resourceGroups', format('{0}-spoke1-rg', parameters('nameprefix')))]",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-spoke1-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'spokensgdeploy')]"
-      ]
-    },
-    {
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2019-10-01",
-      "name": "vnethubroutetabledeploy",
-      "resourceGroup": "[format('{0}-global-vwan-rg', parameters('nameprefix'))]",
-      "properties": {
-        "expressionEvaluationOptions": {
-          "scope": "inner"
-        },
-        "mode": "Incremental",
-        "parameters": {
-          "hubname": {
-            "value": "[variables('hubname')]"
-          },
-          "routetablename": {
-            "value": "RT_VNet"
-          },
-          "routetabellabels": {
-            "value": "VNet"
-          },
-          "routes": {
-            "value": {
-              "routes": [
-                {
-                  "name": "toFirewall",
-                  "destinationType": "CIDR",
-                  "destinations": [
-                    "0.0.0.0/0"
-                  ],
-                  "nextHopType": "ResourceId",
-                  "nextHop": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-global-vwan-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'firewalldeploy'), '2019-10-01').outputs.firewallid.value]"
-                }
-              ]
-            }
-          }
-        },
-        "template": {
-          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-          "contentVersion": "1.0.0.0",
-          "parameters": {
-            "hubname": {
-              "type": "string",
-              "metadata": {
-                "description": "Specifies the name of the Virtual Hub resources to add a route table to."
-              }
-            },
-            "routetablename": {
-              "type": "string",
-              "metadata": {
-                "description": "Specifies the name to use for the Virtual Hub Route table resources."
-              }
-            },
-            "routes": {
-              "type": "object",
-              "metadata": {
-                "description": "Specifies the name custom routes to add to the route table"
-              }
-            },
-            "routetabellabels": {
-              "type": "string",
-              "metadata": {
-                "description": "Specifies the labels that the hub route table will use"
-              }
-            }
-          },
-          "functions": [],
-          "resources": [
-            {
-              "type": "Microsoft.Network/virtualHubs/hubRouteTables",
-              "apiVersion": "2020-06-01",
-              "name": "[format('{0}/{1}', parameters('hubname'), parameters('routetablename'))]",
-              "properties": {
-                "routes": "[parameters('routes').routes]",
-                "labels": [
-                  "[parameters('routetabellabels')]"
-                ]
-              }
-            }
-          ],
-          "outputs": {
-            "routetableid": {
-              "type": "string",
-              "value": "[resourceId('Microsoft.Network/virtualHubs/hubRouteTables', split(format('{0}/{1}', parameters('hubname'), parameters('routetablename')), '/')[0], split(format('{0}/{1}', parameters('hubname'), parameters('routetablename')), '/')[1])]"
-            }
-          }
-        }
-      },
-      "dependsOn": [
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-global-vwan-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'firewalldeploy')]",
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', format('{0}-global-vwan-rg', parameters('nameprefix')))]"
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-spoke1-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'spokeservernsgdeploy')]"
       ]
     },
     {
@@ -1298,6 +1475,284 @@
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-spoke1-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'spokevnetdeploy')]",
         "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-global-vwan-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'vnethubroutetabledeploy')]",
         "[subscriptionResourceId('Microsoft.Resources/resourceGroups', format('{0}-global-vwan-rg', parameters('nameprefix')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "spokebastiondeploy",
+      "resourceGroup": "[format('{0}-spoke1-rg', parameters('nameprefix'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "bastionname": {
+            "value": "[variables('spokebastionname')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "bastionsubnetref": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-spoke1-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'spokevnetdeploy'), '2019-10-01').outputs.bastionsubnetid.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "Specifies the Azure location where the Bastion service should be created."
+              },
+              "defaultValue": "[resourceGroup().location]"
+            },
+            "bastionname": {
+              "type": "string",
+              "metadata": {
+                "description": "Specifies the name to use for the Bastion resource."
+              }
+            },
+            "bastionsubnetref": {
+              "type": "string",
+              "metadata": {
+                "description": "Specifies the resource id of the subnet to connect the Bastion service to."
+              }
+            }
+          },
+          "functions": [],
+          "resources": [
+            {
+              "type": "Microsoft.Network/publicIPAddresses",
+              "apiVersion": "2020-05-01",
+              "name": "[format('{0}-pip', parameters('bastionname'))]",
+              "location": "[parameters('location')]",
+              "sku": {
+                "name": "Standard"
+              },
+              "properties": {
+                "publicIPAllocationMethod": "Static"
+              }
+            },
+            {
+              "type": "Microsoft.Network/bastionHosts",
+              "apiVersion": "2020-05-01",
+              "name": "[parameters('bastionname')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "ipConfigurations": [
+                  {
+                    "name": "IPConf",
+                    "properties": {
+                      "subnet": {
+                        "id": "[parameters('bastionsubnetref')]"
+                      },
+                      "publicIPAddress": {
+                        "id": "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}-pip', parameters('bastionname')))]"
+                      }
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}-pip', parameters('bastionname')))]"
+              ]
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', format('{0}-spoke1-rg', parameters('nameprefix')))]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-spoke1-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'spokevnetdeploy')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "spokevmdeploy",
+      "resourceGroup": "[format('{0}-spoke1-rg', parameters('nameprefix'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "vmname": {
+            "value": "[variables('spokevmname')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "diskname": {
+            "value": "[variables('spokediskname')]"
+          },
+          "nicname": {
+            "value": "[variables('spokenicname')]"
+          },
+          "adminusername": {
+            "value": "[parameters('adminusername')]"
+          },
+          "adminpassword": {
+            "value": "[parameters('adminpassword')]"
+          },
+          "subnetref": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-spoke1-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'spokevnetdeploy'), '2019-10-01').outputs.serversubnetid.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "Specifies the Azure location where the VM should be created."
+              },
+              "defaultValue": "[resourceGroup().location]"
+            },
+            "vmname": {
+              "type": "string",
+              "metadata": {
+                "description": "Specifies the name to use for the VM resource."
+              }
+            },
+            "diskname": {
+              "type": "string",
+              "metadata": {
+                "description": "Specifies the name to use for the OS Disk resource."
+              }
+            },
+            "nicname": {
+              "type": "string",
+              "metadata": {
+                "description": "Specifies the name to use for the VM network Interface resource."
+              }
+            },
+            "subnetref": {
+              "type": "string",
+              "metadata": {
+                "description": "Specifies the resource id of the subnet to connect the VM to."
+              }
+            },
+            "adminusername": {
+              "type": "string",
+              "metadata": {
+                "description": "The local admin user name for the deployed servers"
+              },
+              "defaultValue": "sysadmin"
+            },
+            "adminpassword": {
+              "type": "secureString",
+              "metadata": {
+                "description": "The local admin password"
+              }
+            },
+            "windowsosversion": {
+              "type": "string",
+              "metadata": {
+                "description": "The Windows version for the VM. This will pick a fully patched image of this given Windows version."
+              },
+              "defaultValue": "2019-Datacenter",
+              "allowedValues": [
+                "2016-Datacenter",
+                "2019-Datacenter"
+              ]
+            },
+            "vmsize": {
+              "type": "string",
+              "metadata": {
+                "description": "Size of the VM."
+              },
+              "defaultValue": "Standard_D2_v3"
+            }
+          },
+          "functions": [],
+          "variables": {
+            "storagename": "[concat('vmlogs', uniqueString(resourceGroup().id))]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Storage/storageAccounts",
+              "apiVersion": "2019-06-01",
+              "name": "[variables('storagename')]",
+              "location": "[parameters('location')]",
+              "sku": {
+                "name": "Standard_LRS"
+              },
+              "kind": "Storage"
+            },
+            {
+              "type": "Microsoft.Network/networkInterfaces",
+              "apiVersion": "2020-05-01",
+              "name": "[parameters('nicname')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "ipConfigurations": [
+                  {
+                    "name": "ipconfig1",
+                    "properties": {
+                      "privateIPAllocationMethod": "Dynamic",
+                      "subnet": {
+                        "id": "[parameters('subnetref')]"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Microsoft.Compute/virtualMachines",
+              "apiVersion": "2019-12-01",
+              "name": "[parameters('vmname')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "hardwareProfile": {
+                  "vmSize": "[parameters('vmsize')]"
+                },
+                "osProfile": {
+                  "computerName": "[parameters('vmname')]",
+                  "adminUsername": "[parameters('adminusername')]",
+                  "adminPassword": "[parameters('adminpassword')]"
+                },
+                "storageProfile": {
+                  "imageReference": {
+                    "publisher": "MicrosoftWindowsServer",
+                    "offer": "WindowsServer",
+                    "sku": "[parameters('windowsosversion')]",
+                    "version": "latest"
+                  },
+                  "osDisk": {
+                    "name": "[parameters('diskname')]",
+                    "createOption": "FromImage"
+                  }
+                },
+                "networkProfile": {
+                  "networkInterfaces": [
+                    {
+                      "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('nicname'))]"
+                    }
+                  ]
+                },
+                "diagnosticsProfile": {
+                  "bootDiagnostics": {
+                    "enabled": true,
+                    "storageUri": "[reference(resourceId('Microsoft.Storage/storageAccounts', variables('storagename'))).primaryEndpoints.blob]"
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', parameters('nicname'))]",
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('storagename'))]"
+              ]
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', format('{0}-spoke1-rg', parameters('nameprefix')))]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-spoke1-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'spokevnetdeploy')]"
       ]
     }
   ]
