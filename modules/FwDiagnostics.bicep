@@ -1,12 +1,12 @@
 param location string {
   default: resourceGroup().location
   metadata: {
-    description: 'Specifies the Azure location where the key vault should be created.'
+    description: 'Specifies the Azure location where the resource should be created.'
   }
 }
 param fwname string {
   metadata: {
-    description: 'Specifies the name to use for the Azure Firewall resources.'
+    description: 'Specifies the name of the Azure Firewall resources.'
   }
 }
 param loganalyticsid string {

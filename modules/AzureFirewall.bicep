@@ -2,18 +2,12 @@
 param location string {
   default: resourceGroup().location
   metadata: {
-    description: 'Specifies the Azure location where the key vault should be created.'
+    description: 'Specifies the Azure location where the Azure Firewall should be created.'
   }
 }
 param fwname string {
   metadata: {
-    description: 'Specifies the namine to use for the Virtual WAN resources.'
-  }
-}
-param hubaddressprefix string {
-  default: '10.0.0.0/24'
-  metadata: {
-    description: 'Specifies the Virtual Hub Address Prefix.'
+    description: 'Specifies the name to use for the Azure Firewall resources.'
   }
 }
 param hubid string {
@@ -29,10 +23,9 @@ param fwpolicyid string {
 param fwpublicipcount int {
   default: 2
   metadata: {
-    description: 'Virtual Hub Resource ID'
+    description: 'Specifies the number of public IPs to allocate to the firewall'
   }
 }
-
 resource firewall 'Microsoft.Network/azureFirewalls@2020-06-01' = {
   name: fwname
   location: location
