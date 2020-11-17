@@ -51,7 +51,7 @@ The Azure Virtual WAN Playground deploys the following topology:
       - Local Network Gateway
 - Log Analytics Workspace (Firewall Diagnostics)  
  
-<img src="https://github.com/StefanIvemo/vwan-playground/blob/main/media/vwan-playground-topology.png?raw=true">
+<img src="https://github.com/StefanIvemo/vwan-playground/blob/main/media/vwan-playground-topology_v2.png?raw=true">
 
 ## Improvements
 
