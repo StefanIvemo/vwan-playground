@@ -17,9 +17,6 @@
         "hubaddressprefix": {
             "value": "10.0.0.0/24"
         },
-        "fwpublicipcount": {
-            "value": 2
-        },
         "spokeaddressprefix": {
             "value": "10.0.1.0/24"
         },
@@ -41,6 +38,9 @@
         "onpremvpngatewaysubnetprefix": {
             "value": "10.20.0.128/26"
         },
+        "onpremfirewallsubnetprefix": {
+            "value": "10.20.0.192/26"
+        },
         "adminusername": {
             "value": "sysadmin"
         },
@@ -49,6 +49,6 @@
         },
         "vmsize": {
             "value": "Standard_D2_v3"
-        }   
-    }       
+        }
+    }
 }

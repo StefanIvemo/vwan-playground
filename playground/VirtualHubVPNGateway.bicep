@@ -29,6 +29,8 @@ resource hubvpngw 'Microsoft.Network/vpnGateways@2020-06-01' = {
   }     
 }
 
+output id string = hubvpngw.id
+output name string = hubvpngw.name
 output gwpublicip string = hubvpngw.properties.ipConfigurations[0].publicIpAddress
 output gwprivateip string = hubvpngw.properties.ipConfigurations[0].privateIpAddress
 
