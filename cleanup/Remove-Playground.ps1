@@ -1,21 +1,19 @@
-#This script removes all components of the Virtual WAN Playground in the correct order.
+#This script removes all components of the Virtual WAN Playground
 param(
   $subscriptionID='',
-  $rgName='',
+  $rgNames=@("contoso-vwan-rg", "contoso-mgmt-rg", "contoso-spoke1-rg", "contoso-onprem-rg"),
   $cleanuptemplate='.\cleanup.json'
 )
 
-#Verify if user have signed in to Azure
-if ((az account list) -eq "[]") {
-  Write-Host "Please sign in to Azure using your browser"
-  az login
-  Write-Host "Set active subscription to $subscriptionID"
-  az account set --subscription $subscriptionID
-}    else {
-  Write-Host "User signed in, set active subscription to $subscriptionID"
-  az account set --subscription $subscriptionID
+#Select subscription
+Select-AzSubscription -SubscriptionId $subscriptionID
+
+#Remove all resources by deploying and emtpy template using Complete mode
+$jobs = foreach($rg in $rgNames) {
+  New-AzResourceGroupDeployment -Name "cleanup-$rg" -ResourceGroupName $rg -TemplateFile .\cleanup.json -Mode Complete -Force -AsJob
 }
 
-az deployment group create --resource-group $rgName --template-file $cleanuptemplate --mode Complete
-
-Write-Host "Started empty deployment on target Resource Group $rgName"
+#Remove all resource groups
+$rgNames | ForEach-Object -Parallel {
+  Remove-AzResourceGroup -Name $_ -Force
+}
