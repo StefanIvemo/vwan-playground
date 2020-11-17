@@ -23,7 +23,7 @@ New-AzDeployment -Name vwanplayground -Location <location> -TemplateFile .\main.
 ### Azure CLI
 
 ```
-az deployment sub create -n vwanplayground --location <location> --template-file .\main.json
+az deployment sub create -n vwanplayground --location <location> --template-file main.json -parameters @main.parameters.json
 ```
 
 ## Topology
