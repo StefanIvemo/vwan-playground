@@ -1,27 +1,19 @@
-#This script removes all components of the Virtual WAN Playground in the correct order.
+#This script removes all components of the Virtual WAN Playground
 param(
-  $subscriptionID='95695240-9cfc-444f-8dcb-a7e45ce85aa2',
-  $rgNames=@("contoso-global-vwan-rg", "contoso-mgmt-rg", "contoso-spoke1-rg"),
+  $subscriptionID='',
+  $rgNames=@("contoso-vwan-rg", "contoso-mgmt-rg", "contoso-spoke1-rg", "contoso-onprem-rg"),
   $cleanuptemplate='.\cleanup.json'
 )
 
-#Verify if user have signed in to Azure
-if ((az account list) -eq "[]") {
-  Write-Host "Please sign in to Azure using your browser"
-  az login
-  Write-Host "Set active subscription to $subscriptionID"
-  az account set --subscription $subscriptionID
-}    else {
-  Write-Host "User signed in, set active subscription to $subscriptionID"
-  az account set --subscription $subscriptionID
+#Select subscription
+Select-AzSubscription -SubscriptionId $subscriptionID
+
+#Remove all resources by deploying and emtpy template using Complete mode
+$jobs = foreach($rg in $rgNames) {
+  New-AzResourceGroupDeployment -Name "cleanup-$rg" -ResourceGroupName $rg -TemplateFile .\cleanup.json -Mode Complete -Force -AsJob
 }
 
+#Remove all resource groups
 $rgNames | ForEach-Object -Parallel {
-  az deployment group create --resource-group $_ --template-file $using:cleanuptemplate --mode Complete
-  Write-Host "Started cleanup deployment on scope: $_, sit back and relax!"
-}
-
-$rgNames | ForEach-Object -Parallel {
-  az group delete --resource-group $_
-  Write-Host "Removing resource group $_"
+  Remove-AzResourceGroup -Name $_ -Force
 }
