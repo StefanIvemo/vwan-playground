@@ -1,25 +1,15 @@
-param location string {
-    default: resourceGroup().location
-    metadata: {
-      description: 'Specifies the Azure location where the resource should be created.'
-    }
-}
-param wantype string {
-    default: 'Standard'
-    allowed: [
-        'Standard'
-        'Basic'
-    ]
-    metadata: {
-      description: 'Specifies the type of Virtual WAN.'
-    }
-}
-param wanname string {
-    default: 'contoso'
-    metadata: {
-      description: 'Specifies the name to use for the Virtual WAN resources.'
-    }
-}
+@description('Specifies the Azure location where the resource should be created.')
+param location string = resourceGroup().location
+
+@allowed([
+  'Standard'
+  'Basic'
+])
+@description('Specifies the type of Virtual WAN.')
+param wantype string = 'Standard'
+
+@description('Specifies the name to use for the Virtual WAN resources.')
+param wanname string = 'contoso'
 
 resource wan 'Microsoft.Network/virtualWans@2020-06-01' = {
     name: wanname

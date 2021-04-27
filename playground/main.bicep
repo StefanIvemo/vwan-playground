@@ -1,122 +1,68 @@
 targetScope='subscription'
 
-param location string {
-  default: 'westeurope'
-  metadata: {
-    description: 'Specifies the Azure location where the resource should be created.'
-  }
-}
-param nameprefix string {
-  default: 'contoso'
-  metadata: {
-    description: 'Specifies the naming prefix to use for the Virtual WAN resources.'
-  }
-}
-param wantype string {
-  default: 'Standard'
-  allowed: [
-    'Standard'
-    'Basic'
-  ]
-  metadata: {
-    description: 'Specifies the type of Virtual WAN.'
-  }
-}
-param regionaladdressspace string {
-  default: '10.0.0.0/16'
-  metadata: {
-    description: 'Specifies the CIDR that contains all address spaces used in Azure, should cover the VWAN Hub and all attached VNet Spokes. Used for routing.'
-  }
-}
-param hubaddressprefix string {
-  default: '10.0.0.0/24'
-  metadata: {
-    description: 'Specifies the Virtual Hub Address Prefix.'
-  }
-}
-param spokeaddressprefix string {
-  default: '10.0.1.0/24'
-  metadata: {
-    description: 'Specify the address prefix to use for the spoke VNet'
-  }
-}
-param spokeserversubnetprefix string {
-  default: '10.0.1.0/26'
-  metadata: {
-    description: 'Specify the address prefix to use for server subnet in the spoke VNet'
-  }
-}
-param spokebastionsubnetprefix string {
-  default: '10.0.1.64/26'
-  metadata: {
-    description: 'Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet'
-  }
-}
-param onpremaddressprefix string {
-  default: '10.20.0.0/24'
-  metadata: {
-    description: 'Specify the address prefix to use for the spoke VNet'
-  }
-}
-param onpremserversubnetprefix string {
-  default: '10.20.0.0/26'
-  metadata: {
-    description: 'Specify the address prefix to use for server subnet in the spoke VNet'
-  }
-}
-param onprembastionsubnetprefix string {
-  default: '10.20.0.64/26'
-  metadata: {
-    description: 'Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet'
-  }
-}
-param onpremvpngatewaysubnetprefix string {
-  default: '10.20.0.128/26'
-  metadata: {
-    description: 'Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet'
-  }
-}
-param onpremfirewallsubnetprefix string {
-  default: '10.20.0.192/26'
-  metadata: {
-    description: 'Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet'
-  }
-}
-param psk string {
-  secure:true
-  metadata: {
-      'description': 'PSK to use for the site to site tunnel between Virtual Hub and On-Prem VNet' 
-  }
-}
-param adminusername string {
-  default :'sysadmin'
-  metadata: {
-      'description': 'The local admin user name for the deployed servers' 
-  }
-}
+@description('Specifies the Azure location where the resource should be created.')
+param location string = 'westeurope'
 
-param adminpassword string {
-  secure:true
-  metadata: {
-      'description': 'The local admin password' 
-  }
-}
-param windowsosversion string {
-  default :'2019-Datacenter'
-  allowed : [        
-      '2016-Datacenter'
-      '2019-Datacenter'
-    ]
-    metadata: {
-      'description': 'The Windows version for the VM. This will pick a fully patched image of this given Windows version.' 
-    }
-}
-param vmsize string {
-  default: 'Standard_D2_v3'
-  metadata: {
-    description: 'Size of the virtual machine.'
-  }
-}
+@description('Specifies the naming prefix to use for the Virtual WAN resources.')
+param nameprefix string = 'contoso'
+
+@description('Specifies the type of Virtual WAN.')
+@allowed([
+  'Standard'
+  'Basic'
+])
+param wantype string = 'Standard'
+
+@description('Specifies the CIDR that contains all address spaces used in Azure, should cover the VWAN Hub and all attached VNet Spokes. Used for routing.')
+param regionaladdressspace string = '10.0.0.0/16'
+
+@description('Specifies the Virtual Hub Address Prefix.')
+param hubaddressprefix string = '10.0.0.0/24'
+
+@description('Specify the address prefix to use for the spoke VNet')
+param spokeaddressprefix string = '10.0.1.0/24'
+
+@description('Specify the address prefix to use for server subnet in the spoke VNet')
+param spokeserversubnetprefix string = '10.0.1.0/26'
+
+@description('Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet')
+param spokebastionsubnetprefix string = '10.0.1.64/26'
+
+@description('Specify the address prefix to use for the spoke VNet')
+param onpremaddressprefix string = '10.20.0.0/24'
+
+@description('Specify the address prefix to use for server subnet in the spoke VNet')
+param onpremserversubnetprefix string = '10.20.0.0/26'
+
+@description('Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet')
+param onprembastionsubnetprefix string = '10.20.0.64/26'
+
+@description('Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet')
+param onpremvpngatewaysubnetprefix string = '10.20.0.128/26'
+
+@description('Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet')
+param onpremfirewallsubnetprefix string = '10.20.0.192/26'
+
+@description('PSK to use for the site to site tunnel between Virtual Hub and On-Prem VNet')
+@secure()
+param psk string
+
+@description('The local admin user name for the deployed servers')
+param adminusername string = 'sysadmin'
+
+@description('The local admin password')
+@secure()
+param adminpassword string
+
+@description('The Windows version for the VM. This will pick a fully patched image of this given Windows version.')
+@allowed([
+  '2016-Datacenter'
+  '2019-Datacenter'
+])
+param windowsosversion string = '2019-Datacenter'
+
+@description('Size of the virtual machine.')
+param vmsize string = 'Standard_D2_v3'
 
 /*Variables for VWAN */
 var wanname = '${nameprefix}-vwan'

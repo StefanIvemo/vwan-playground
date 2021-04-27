@@ -1,9 +1,6 @@
-param location string {
-  default: resourceGroup().location
-  metadata: {
-    description: 'Specifies the Azure location where the resource should be created.'
-  }
-}
+@description('Specifies the Azure location where the resource should be created.')
+param location string = resourceGroup().location
+
 param loganalyticsprefix string
 
 var loganalyticsname = concat('${loganalyticsprefix}', uniqueString(resourceGroup().id))
