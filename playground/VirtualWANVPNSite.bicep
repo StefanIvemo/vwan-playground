@@ -1,34 +1,20 @@
-param vpnsitename string {
-  metadata: {
-    description: 'Specifies the name of the VPN Site'
-  }
-}
-param location string {
-  default: resourceGroup().location
-  metadata: {
-    description: 'Specifies the Azure location where the vpnsite should be created.'
-  }
-}
-param addressprefix string {
-  metadata: {
-    description: 'Specifices the VPN Sites local IP Addresses'
-  }
-}
-param bgppeeringpddress string {
-  metadata: {
-    description: 'Specifices the VPN Sites BGP Peering IP Addresses'
-  }
-}
-param ipaddress string {
-  metadata: {
-    description: 'Specifices the VPN Sites VPN Device IP Address'
-  }
-}
-param wanid string {
-  metadata: {
-    description: 'Specifices the resource ID of the Virtual WAN where the VPN Site should be created'
-  }
-}
+@description('Specifies the name of the VPN Site')
+param vpnsitename string
+
+@description('Specifies the Azure location where the vpnsite should be created.')
+param location string = resourceGroup().location
+
+@description('Specifices the VPN Sites local IP Addresses')
+param addressprefix string
+
+@description('Specifices the VPN Sites BGP Peering IP Addresses')
+param bgppeeringpddress string
+
+@description('Specifices the VPN Sites VPN Device IP Address')
+param ipaddress string
+
+@description('Specifices the resource ID of the Virtual WAN where the VPN Site should be created')
+param wanid string
 
 resource vpnsite 'Microsoft.Network/vpnSites@2020-06-01' = {
   name: vpnsitename

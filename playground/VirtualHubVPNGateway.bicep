@@ -1,20 +1,11 @@
+@description('Specifies the Azure location where the resource should be created.')
+param location string = resourceGroup().location
 
-param location string {
-  default: resourceGroup().location
-  metadata: {
-    description: 'Specifies the Azure location where the resource should be created.'
-  }
-}
-param hubvpngwname string {
-  metadata: {
-    description: 'Specifies the name to use for the Virtual Hub resource.'
-  }
-}
-param hubid string {
-  metadata: {
-    description: 'Virtual WAN ID'
-  }
-}
+@description('Specifies the name to use for the Virtual Hub resource.')
+param hubvpngwname string
+
+@description('Virtual WAN ID')
+param hubid string
 
 resource hubvpngw 'Microsoft.Network/vpnGateways@2020-06-01' = {
   name: hubvpngwname

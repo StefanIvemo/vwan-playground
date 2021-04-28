@@ -1,19 +1,11 @@
-param location string {
-  default: resourceGroup().location
-  metadata: {
-    description: 'Specifies the Azure location where the resource should be created.'
-  }
-}
-param fwname string {
-  metadata: {
-    description: 'Specifies the name of the Azure Firewall resources.'
-  }
-}
-param loganalyticsid string {
-  metadata: {
-    description: 'Specifies the Log Analtyics ID.'
-  }
-}
+@description('Specifies the Azure location where the resource should be created.')
+param location string = resourceGroup().location
+
+@description('Specifies the name of the Azure Firewall resources.')
+param fwname string
+
+@description('Specifies the Log Analtyics ID.')
+param loganalyticsid string
 
 resource firewalldiag 'Microsoft.Network/azureFirewalls/providers/diagnosticSettings@2017-05-01-preview' = {
   name: '${fwname}/Microsoft.Insights/diagnostics'

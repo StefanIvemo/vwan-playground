@@ -1,9 +1,5 @@
-
-param fwpolicyname string {
-    metadata: {
-      description: 'Specifies the name of the FW Policy where the rule collection group should be created.'
-    }
-  }
+@description('Specifies the name of the FW Policy where the rule collection group should be created.')
+param fwpolicyname string
 
 resource platformrcgroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2020-06-01' = {
   name: '${fwpolicyname}/Platform-Rules'

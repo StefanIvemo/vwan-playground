@@ -1,22 +1,13 @@
-param location string {
-  default: resourceGroup().location
-  metadata: {
-    description: 'Specifies the Azure location where the resource should be created.'
-  }
-}
-param policyname string {
-  metadata: {
-    description: 'Specifies the name to use for the Firewall Policy'
-  }
-}
-param dnsservers array {
-  default: [
-    '168.63.129.16'
-  ]
-  metadata: {
-    description: 'Specify custom DNS Servers for Azure Firewall'
-  }
-}
+@description('Specifies the Azure location where the resource should be created.')
+param location string = resourceGroup().location
+
+@description('Specifies the name to use for the Firewall Policy')
+param policyname string
+
+@description('Specify custom DNS Servers for Azure Firewall')
+param dnsservers array = [
+  '168.63.129.16'
+]
 
 resource policy 'Microsoft.Network/firewallPolicies@2020-06-01' = {
   name: policyname

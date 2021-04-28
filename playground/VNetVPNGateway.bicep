@@ -1,24 +1,14 @@
-param location string {
-  default: resourceGroup().location
-  metadata: {
-    description: 'Specifies the Azure location where the resource should be created.'
-  }
-}
-param vpngwpipname string {
-  metadata: {
-    description: 'Specifies the name to use for the VM resource.'
-  }
-}
-param vpngwname string {
-  metadata: {
-    description: 'Specifies the name to use for the VM resource.'
-  }
-}
-param subnetref string {
-  metadata: {
-    description: 'Specifies the resource id of the subnet to connect the VM to.'
-  }
-}
+@description('Specifies the Azure location where the resource should be created.')
+param location string = resourceGroup().location
+
+@description('Specifies the name to use for the VM resource.')
+param vpngwpipname string
+
+@description('Specifies the name to use for the VM resource.')
+param vpngwname string
+
+@description('Specifies the resource id of the subnet to connect the VM to.')
+param subnetref string
 
 resource vpngwpip 'Microsoft.Network/publicIPAddresses@2020-06-01' = {
   name: vpngwpipname
