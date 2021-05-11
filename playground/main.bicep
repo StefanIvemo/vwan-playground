@@ -103,6 +103,32 @@ var onprems2saddressprefixes = [
 var spokednszonename = 'priv.spoke.${nameprefix}.com'
 var onpremdnszonename = 'priv.onprem.${nameprefix}.com'
 
+var spokeDnsZoneVnetLinks = [
+  {
+    vnetId: spokevnet.outputs.id
+    linkName: 'spoke-registration'
+    registrationEnabled: true
+  }
+  {
+    vnetId: onpremvnet.outputs.id
+    linkName: 'onprem-link'
+    registrationEnabled: false
+  }
+]
+
+var onpremDnsZoneVnetLinks = [
+  {
+    vnetId: spokevnet.outputs.id
+    linkName: 'spoke-link'
+    registrationEnabled: false
+  }
+  {
+    vnetId: onpremvnet.outputs.id
+    linkName: 'onprem-registration'
+    registrationEnabled: true
+  }
+]
+
 resource wanrg 'Microsoft.Resources/resourceGroups@2020-06-01' = {
   name: '${nameprefix}-vwan-rg'
   location: location
@@ -278,23 +304,21 @@ module spokevnet './SpokeVNet.bicep' = {
   }
 }
 
-module spokednszone './SpokePrivateDNS.bicep' = {
+module spokednszone './PrivateDNS.bicep' = {
   name: 'spokednszonedeploy'
   scope: resourceGroup(spokerg.name)
   params:{
-    spokezonename: spokednszonename
-    onpremvnetid: onpremvnet.outputs.id
-    spokevnetid: spokevnet.outputs.id
+    zoneName: spokednszonename
+    vnetLinks: spokeDnsZoneVnetLinks 
   }
 }
 
-module onpremdnszone './HubPrivateDNS.bicep' = {
+module onpremdnszone './PrivateDNS.bicep' = {
   name: 'onpremdnszonedeploy'
   scope: resourceGroup(onpremrg.name)
   params:{
-    onpremzonename: onpremdnszonename
-    onpremvnetid: onpremvnet.outputs.id
-    spokevnetid: spokevnet.outputs.id
+    zoneName: onpremdnszonename
+    vnetLinks: onpremDnsZoneVnetLinks 
   }
 }
 module hubvnetconnection './VirtualHubVNetConnection.bicep' = {

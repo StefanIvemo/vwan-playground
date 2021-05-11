@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.3.255.40792",
-      "templateHash": "8945617227316285190"
+      "templateHash": "976334222357714876"
     }
   },
   "parameters": {
@@ -1553,14 +1553,22 @@
         },
         "mode": "Incremental",
         "parameters": {
-          "spokezonename": {
+          "zoneName": {
             "value": "[variables('spokednszonename')]"
           },
-          "onpremvnetid": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-onprem-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'onpremvnetdeploy'), '2019-10-01').outputs.id.value]"
-          },
-          "spokevnetid": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-spoke1-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'spokevnetdeploy'), '2019-10-01').outputs.id.value]"
+          "vnetLinks": {
+            "value": [
+              {
+                "vnetId": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-spoke1-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'spokevnetdeploy'), '2019-10-01').outputs.id.value]",
+                "linkName": "spoke-registration",
+                "registrationEnabled": true
+              },
+              {
+                "vnetId": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-onprem-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'onpremvnetdeploy'), '2019-10-01').outputs.id.value]",
+                "linkName": "onprem-link",
+                "registrationEnabled": false
+              }
+            ]
           }
         },
         "template": {
@@ -1570,57 +1578,46 @@
             "_generator": {
               "name": "bicep",
               "version": "0.3.255.40792",
-              "templateHash": "9922844858156766595"
+              "templateHash": "13743113332226198087"
             }
           },
           "parameters": {
-            "spokezonename": {
+            "zoneName": {
               "type": "string"
             },
-            "spokevnetid": {
-              "type": "string"
-            },
-            "onpremvnetid": {
-              "type": "string"
+            "vnetLinks": {
+              "type": "array"
             }
           },
           "functions": [],
           "resources": [
             {
               "type": "Microsoft.Network/privateDnsZones",
-              "apiVersion": "2018-09-01",
-              "name": "[parameters('spokezonename')]",
+              "apiVersion": "2020-06-01",
+              "name": "[parameters('zoneName')]",
               "location": "global"
             },
             {
+              "copy": {
+                "name": "vnetLink",
+                "count": "[length(parameters('vnetLinks'))]"
+              },
               "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
-              "apiVersion": "2018-09-01",
-              "name": "[format('{0}/onprem-link', parameters('spokezonename'))]",
+              "apiVersion": "2020-06-01",
+              "name": "[format('{0}/{1}', parameters('zoneName'), parameters('vnetLinks')[copyIndex()].linkName)]",
               "location": "global",
               "properties": {
-                "registrationEnabled": false,
+                "registrationEnabled": "[parameters('vnetLinks')[copyIndex()].registrationEnabled]",
                 "virtualNetwork": {
-                  "id": "[parameters('onpremvnetid')]"
-                }
-              }
-            },
-            {
-              "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
-              "apiVersion": "2018-09-01",
-              "name": "[format('{0}/spoke-registration', parameters('spokezonename'))]",
-              "location": "global",
-              "properties": {
-                "registrationEnabled": true,
-                "virtualNetwork": {
-                  "id": "[parameters('spokevnetid')]"
+                  "id": "[parameters('vnetLinks')[copyIndex()].vnetId]"
                 }
               }
             }
           ],
           "outputs": {
-            "id": {
+            "resourceId": {
               "type": "string",
-              "value": "[resourceId('Microsoft.Network/privateDnsZones', parameters('spokezonename'))]"
+              "value": "[resourceId('Microsoft.Network/privateDnsZones', parameters('zoneName'))]"
             }
           }
         }
@@ -1642,14 +1639,22 @@
         },
         "mode": "Incremental",
         "parameters": {
-          "onpremzonename": {
+          "zoneName": {
             "value": "[variables('onpremdnszonename')]"
           },
-          "onpremvnetid": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-onprem-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'onpremvnetdeploy'), '2019-10-01').outputs.id.value]"
-          },
-          "spokevnetid": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-spoke1-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'spokevnetdeploy'), '2019-10-01').outputs.id.value]"
+          "vnetLinks": {
+            "value": [
+              {
+                "vnetId": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-spoke1-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'spokevnetdeploy'), '2019-10-01').outputs.id.value]",
+                "linkName": "spoke-link",
+                "registrationEnabled": false
+              },
+              {
+                "vnetId": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-onprem-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'onpremvnetdeploy'), '2019-10-01').outputs.id.value]",
+                "linkName": "onprem-registration",
+                "registrationEnabled": true
+              }
+            ]
           }
         },
         "template": {
@@ -1659,57 +1664,46 @@
             "_generator": {
               "name": "bicep",
               "version": "0.3.255.40792",
-              "templateHash": "15576858842166640110"
+              "templateHash": "13743113332226198087"
             }
           },
           "parameters": {
-            "onpremzonename": {
+            "zoneName": {
               "type": "string"
             },
-            "spokevnetid": {
-              "type": "string"
-            },
-            "onpremvnetid": {
-              "type": "string"
+            "vnetLinks": {
+              "type": "array"
             }
           },
           "functions": [],
           "resources": [
             {
               "type": "Microsoft.Network/privateDnsZones",
-              "apiVersion": "2018-09-01",
-              "name": "[parameters('onpremzonename')]",
+              "apiVersion": "2020-06-01",
+              "name": "[parameters('zoneName')]",
               "location": "global"
             },
             {
+              "copy": {
+                "name": "vnetLink",
+                "count": "[length(parameters('vnetLinks'))]"
+              },
               "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
-              "apiVersion": "2018-09-01",
-              "name": "[format('{0}/spoke-link', parameters('onpremzonename'))]",
+              "apiVersion": "2020-06-01",
+              "name": "[format('{0}/{1}', parameters('zoneName'), parameters('vnetLinks')[copyIndex()].linkName)]",
               "location": "global",
               "properties": {
-                "registrationEnabled": false,
+                "registrationEnabled": "[parameters('vnetLinks')[copyIndex()].registrationEnabled]",
                 "virtualNetwork": {
-                  "id": "[parameters('spokevnetid')]"
-                }
-              }
-            },
-            {
-              "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
-              "apiVersion": "2018-09-01",
-              "name": "[format('{0}/onprem-registration', parameters('onpremzonename'))]",
-              "location": "global",
-              "properties": {
-                "registrationEnabled": true,
-                "virtualNetwork": {
-                  "id": "[parameters('onpremvnetid')]"
+                  "id": "[parameters('vnetLinks')[copyIndex()].vnetId]"
                 }
               }
             }
           ],
           "outputs": {
-            "id": {
+            "resourceId": {
               "type": "string",
-              "value": "[resourceId('Microsoft.Network/privateDnsZones', parameters('onpremzonename'))]"
+              "value": "[resourceId('Microsoft.Network/privateDnsZones', parameters('zoneName'))]"
             }
           }
         }
