@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.3.255.40792",
-      "templateHash": "976334222357714876"
+      "templateHash": "7034006985079928411"
     }
   },
   "parameters": {
@@ -1578,7 +1578,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.3.255.40792",
-              "templateHash": "13743113332226198087"
+              "templateHash": "9283419315670758204"
             }
           },
           "parameters": {
@@ -1611,7 +1611,10 @@
                 "virtualNetwork": {
                   "id": "[parameters('vnetLinks')[copyIndex()].vnetId]"
                 }
-              }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', parameters('zoneName'))]"
+              ]
             }
           ],
           "outputs": {
@@ -1664,7 +1667,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.3.255.40792",
-              "templateHash": "13743113332226198087"
+              "templateHash": "9283419315670758204"
             }
           },
           "parameters": {
@@ -1697,7 +1700,10 @@
                 "virtualNetwork": {
                   "id": "[parameters('vnetLinks')[copyIndex()].vnetId]"
                 }
-              }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', parameters('zoneName'))]"
+              ]
             }
           ],
           "outputs": {
