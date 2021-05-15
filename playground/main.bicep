@@ -313,14 +313,6 @@ module spokednszone './PrivateDNS.bicep' = {
   }
 }
 
-module onpremdnszone './PrivateDNS.bicep' = {
-  name: 'onpremdnszonedeploy'
-  scope: resourceGroup(onpremrg.name)
-  params:{
-    zoneName: onpremdnszonename
-    vnetLinks: onpremDnsZoneVnetLinks 
-  }
-}
 module hubvnetconnection './VirtualHubVNetConnection.bicep' = {
   name: 'hubvnetconnectiondeploy'
   scope: resourceGroup(wanrg.name)
@@ -370,6 +362,15 @@ module onpremvnet './HubVNet.bicep' = {
     servernsgid: onpremservernsg.outputs.id
     bastionnsgid: onprembastionnsg.outputs.id
     dnsservers: firewall.outputs.privateip
+  }
+}
+
+module onpremdnszone './PrivateDNS.bicep' = {
+  name: 'onpremdnszonedeploy'
+  scope: resourceGroup(onpremrg.name)
+  params:{
+    zoneName: onpremdnszonename
+    vnetLinks: onpremDnsZoneVnetLinks 
   }
 }
 
