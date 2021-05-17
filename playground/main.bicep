@@ -100,6 +100,35 @@ var onprems2saddressprefixes = [
   spokeaddressprefix
 ]
 
+var spokednszonename = 'priv.spoke.${nameprefix}.com'
+var onpremdnszonename = 'priv.onprem.${nameprefix}.com'
+
+var spokeDnsZoneVnetLinks = [
+  {
+    vnetId: spokevnet.outputs.id
+    linkName: 'spoke-registration'
+    registrationEnabled: true
+  }
+  {
+    vnetId: onpremvnet.outputs.id
+    linkName: 'onprem-link'
+    registrationEnabled: false
+  }
+]
+
+var onpremDnsZoneVnetLinks = [
+  {
+    vnetId: spokevnet.outputs.id
+    linkName: 'spoke-link'
+    registrationEnabled: false
+  }
+  {
+    vnetId: onpremvnet.outputs.id
+    linkName: 'onprem-registration'
+    registrationEnabled: true
+  }
+]
+
 resource wanrg 'Microsoft.Resources/resourceGroups@2020-06-01' = {
   name: '${nameprefix}-vwan-rg'
   location: location
@@ -275,6 +304,15 @@ module spokevnet './SpokeVNet.bicep' = {
   }
 }
 
+module spokednszone './PrivateDNS.bicep' = {
+  name: 'spokednszonedeploy'
+  scope: resourceGroup(spokerg.name)
+  params:{
+    zoneName: spokednszonename
+    vnetLinks: spokeDnsZoneVnetLinks 
+  }
+}
+
 module hubvnetconnection './VirtualHubVNetConnection.bicep' = {
   name: 'hubvnetconnectiondeploy'
   scope: resourceGroup(wanrg.name)
@@ -324,6 +362,15 @@ module onpremvnet './HubVNet.bicep' = {
     servernsgid: onpremservernsg.outputs.id
     bastionnsgid: onprembastionnsg.outputs.id
     dnsservers: firewall.outputs.privateip
+  }
+}
+
+module onpremdnszone './PrivateDNS.bicep' = {
+  name: 'onpremdnszonedeploy'
+  scope: resourceGroup(onpremrg.name)
+  params:{
+    zoneName: onpremdnszonename
+    vnetLinks: onpremDnsZoneVnetLinks 
   }
 }
 
