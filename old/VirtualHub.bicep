@@ -10,6 +10,13 @@ param hubaddressprefix string = '10.0.0.0/24'
 @description('Virtual WAN ID')
 param wanid string
 
+@allowed([
+    'bosse'
+    'kalle'
+    'goran'
+])
+param emil string
+
 resource hub 'Microsoft.Network/virtualHubs@2020-06-01' = {
     name: hubname
     location: location
