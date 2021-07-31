@@ -29,9 +29,9 @@ resource hub 'Microsoft.Network/virtualHubs@2020-11-01' = {
       id: virtualWanId
     }
     addressPrefix: addressPrefix
+    sku: sku
     virtualRouterAsn: virtualRouterAsn == 0 ? json('null') : virtualRouterAsn
     virtualRouterIps: virtualRouterIps == [] ? json('null') : virtualRouterIps
-    sku: sku
     vpnGateway: vpnGatewayId == '' ? json('null') : {
       id: vpnGatewayId
     }

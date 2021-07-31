@@ -2,6 +2,8 @@ targetScope = 'subscription'
 
 param namePrefix string = 'contoso'
 param location string = 'westeurope'
+param clientId string = '41b23e61-6c1e-4545-b367-cd054e0ed4b4'
+param tenantId string = 'd259a616-4e9d-4615-b83d-2e09a6636fd4'
 
 param regions array = [
   {
@@ -9,18 +11,27 @@ param regions array = [
     hubAddressPrefix: '10.0.0.0/24'
     deployFw: true
     deployVpnGw: true
+    deployErGw: true
+    deployP2SGw: true
+    p2sConfig: {
+      p2sAddressPrefix: '10.0.4.0/22'
+    }
   }
   {
     location: 'northeurope'
     hubAddressPrefix: '10.10.0.0/24'
     deployFw: true
     deployVpnGw: false
+    deployErGw: false
+    deployP2SGw: false
   }
   {
     location: 'eastus'
     hubAddressPrefix: '10.20.0.0/24'
     deployFw: false
     deployVpnGw: true
+    deployErGw: false
+    deployP2SGw: false
   }
 ]
 
@@ -82,3 +93,22 @@ module vpnGateways 'modules/vpnGateways.bicep' = [for (region, i) in regions: if
     location: region.location
   }
 }]
+
+module erGateways 'modules/expressRouteGateways.bicep' = [for (region, i) in regions: if (region.deployErGw) {
+  scope: vwanRg
+  name: 'erGateways-${region.location}-deploy'
+  params: {
+    virtualHubId: virtualHubs[i].outputs.resourceId
+    gwName: '${virtualHubs[i].outputs.resourceName}-erg'
+  }
+}]
+
+module vpnServerConfigurations 'modules/vpnServerConfigurations.bicep' = if (!empty(clientId) && !empty(tenantId)) {
+  scope: vwanRg
+  name: 'vpnServerConfigurations-deploy'
+  params: {
+    vpnConfigName: '${namePrefix}-aad-uservpn-conf'
+    tenantId: tenantId
+    clientId: clientId
+  }
+}

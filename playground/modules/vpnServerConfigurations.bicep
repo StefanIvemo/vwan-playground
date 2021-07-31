@@ -1,8 +1,4 @@
 param vpnConfigName string
-param rootCertName string
-
-@secure()
-param publicCertData string
 
 @secure()
 param tenantId string
@@ -17,13 +13,6 @@ var aadAuthenticationParameters = {
   aadIssuer: 'https://sts.windows.net/${tenantId}/'
 }
 
-var vpnClientRootCertificates = [
-  {
-    name: rootCertName
-    publicCertData: publicCertData
-  }
-]
-
 resource vpnServerConfigurations 'Microsoft.Network/vpnServerConfigurations@2020-11-01' = {
   name: vpnConfigName
   location: location
@@ -33,9 +22,8 @@ resource vpnServerConfigurations 'Microsoft.Network/vpnServerConfigurations@2020
     ]
     vpnAuthenticationTypes: [
       'AAD'
-      'Certificate'
     ]
-    vpnClientRootCertificates: vpnClientRootCertificates
+    vpnClientRootCertificates: []
     vpnClientRevokedCertificates: []
     radiusServers: []
     radiusServerRootCertificates: []
