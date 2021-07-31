@@ -1,101 +1,108 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.3.255.40792",
+      "templateHash": "11122337208456399354"
+    }
+  },
   "parameters": {
     "location": {
       "type": "string",
+      "defaultValue": "westeurope",
       "metadata": {
         "description": "Specifies the Azure location where the resource should be created."
-      },
-      "defaultValue": "westeurope"
+      }
     },
     "nameprefix": {
       "type": "string",
+      "defaultValue": "contoso",
       "metadata": {
         "description": "Specifies the naming prefix to use for the Virtual WAN resources."
-      },
-      "defaultValue": "contoso"
+      }
     },
     "wantype": {
       "type": "string",
-      "metadata": {
-        "description": "Specifies the type of Virtual WAN."
-      },
       "defaultValue": "Standard",
       "allowedValues": [
         "Standard",
         "Basic"
-      ]
+      ],
+      "metadata": {
+        "description": "Specifies the type of Virtual WAN."
+      }
     },
     "regionaladdressspace": {
       "type": "string",
+      "defaultValue": "10.0.0.0/16",
       "metadata": {
         "description": "Specifies the CIDR that contains all address spaces used in Azure, should cover the VWAN Hub and all attached VNet Spokes. Used for routing."
-      },
-      "defaultValue": "10.0.0.0/16"
+      }
     },
     "hubaddressprefix": {
       "type": "string",
+      "defaultValue": "10.0.0.0/24",
       "metadata": {
         "description": "Specifies the Virtual Hub Address Prefix."
-      },
-      "defaultValue": "10.0.0.0/24"
+      }
     },
     "spokeaddressprefix": {
       "type": "string",
+      "defaultValue": "10.0.1.0/24",
       "metadata": {
         "description": "Specify the address prefix to use for the spoke VNet"
-      },
-      "defaultValue": "10.0.1.0/24"
+      }
     },
     "spokeserversubnetprefix": {
       "type": "string",
+      "defaultValue": "10.0.1.0/26",
       "metadata": {
         "description": "Specify the address prefix to use for server subnet in the spoke VNet"
-      },
-      "defaultValue": "10.0.1.0/26"
+      }
     },
     "spokebastionsubnetprefix": {
       "type": "string",
+      "defaultValue": "10.0.1.64/26",
       "metadata": {
         "description": "Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet"
-      },
-      "defaultValue": "10.0.1.64/26"
+      }
     },
     "onpremaddressprefix": {
       "type": "string",
+      "defaultValue": "10.20.0.0/24",
       "metadata": {
         "description": "Specify the address prefix to use for the spoke VNet"
-      },
-      "defaultValue": "10.20.0.0/24"
+      }
     },
     "onpremserversubnetprefix": {
       "type": "string",
+      "defaultValue": "10.20.0.0/26",
       "metadata": {
         "description": "Specify the address prefix to use for server subnet in the spoke VNet"
-      },
-      "defaultValue": "10.20.0.0/26"
+      }
     },
     "onprembastionsubnetprefix": {
       "type": "string",
+      "defaultValue": "10.20.0.64/26",
       "metadata": {
         "description": "Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet"
-      },
-      "defaultValue": "10.20.0.64/26"
+      }
     },
     "onpremvpngatewaysubnetprefix": {
       "type": "string",
+      "defaultValue": "10.20.0.128/26",
       "metadata": {
         "description": "Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet"
-      },
-      "defaultValue": "10.20.0.128/26"
+      }
     },
     "onpremfirewallsubnetprefix": {
       "type": "string",
+      "defaultValue": "10.20.0.192/26",
       "metadata": {
         "description": "Specify the address prefix to use for the AzureBastionSubnet in the spoke VNet"
-      },
-      "defaultValue": "10.20.0.192/26"
+      }
     },
     "psk": {
       "type": "secureString",
@@ -105,10 +112,10 @@
     },
     "adminusername": {
       "type": "string",
+      "defaultValue": "sysadmin",
       "metadata": {
         "description": "The local admin user name for the deployed servers"
-      },
-      "defaultValue": "sysadmin"
+      }
     },
     "adminpassword": {
       "type": "secureString",
@@ -118,21 +125,21 @@
     },
     "windowsosversion": {
       "type": "string",
-      "metadata": {
-        "description": "The Windows version for the VM. This will pick a fully patched image of this given Windows version."
-      },
       "defaultValue": "2019-Datacenter",
       "allowedValues": [
         "2016-Datacenter",
         "2019-Datacenter"
-      ]
+      ],
+      "metadata": {
+        "description": "The Windows version for the VM. This will pick a fully patched image of this given Windows version."
+      }
     },
     "vmsize": {
       "type": "string",
+      "defaultValue": "Standard_D2_v3",
       "metadata": {
         "description": "Size of the virtual machine."
-      },
-      "defaultValue": "Standard_D2_v3"
+      }
     }
   },
   "functions": [],
@@ -166,7 +173,9 @@
     "onprems2saddressprefixes": [
       "[parameters('hubaddressprefix')]",
       "[parameters('spokeaddressprefix')]"
-    ]
+    ],
+    "spokednszonename": "[format('priv.spoke.{0}.com', parameters('nameprefix'))]",
+    "onpremdnszonename": "[format('priv.onprem.{0}.com', parameters('nameprefix'))]"
   },
   "resources": [
     {
@@ -217,20 +226,27 @@
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "409404413661139741"
+            }
+          },
           "parameters": {
             "location": {
               "type": "string",
+              "defaultValue": "[resourceGroup().location]",
               "metadata": {
                 "description": "Specifies the Azure location where the resource should be created."
-              },
-              "defaultValue": "[resourceGroup().location]"
+              }
             },
             "wantype": {
               "type": "string",
+              "defaultValue": "Standard",
               "metadata": {
                 "description": "Specifies the type of Virtual WAN."
               },
-              "defaultValue": "Standard",
               "allowedValues": [
                 "Standard",
                 "Basic"
@@ -238,10 +254,10 @@
             },
             "wanname": {
               "type": "string",
+              "defaultValue": "contoso",
               "metadata": {
                 "description": "Specifies the name to use for the Virtual WAN resources."
-              },
-              "defaultValue": "contoso"
+              }
             }
           },
           "functions": [],
@@ -298,13 +314,20 @@
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "6857641680069420606"
+            }
+          },
           "parameters": {
             "location": {
               "type": "string",
+              "defaultValue": "[resourceGroup().location]",
               "metadata": {
                 "description": "Specifies the Azure location where the resource should be created."
-              },
-              "defaultValue": "[resourceGroup().location]"
+              }
             },
             "hubname": {
               "type": "string",
@@ -314,10 +337,10 @@
             },
             "hubaddressprefix": {
               "type": "string",
+              "defaultValue": "10.0.0.0/24",
               "metadata": {
                 "description": "Specifies the Virtual Hub Address Prefix."
-              },
-              "defaultValue": "10.0.0.0/24"
+              }
             },
             "wanid": {
               "type": "string",
@@ -379,13 +402,20 @@
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "8193100645647548866"
+            }
+          },
           "parameters": {
             "location": {
               "type": "string",
+              "defaultValue": "[resourceGroup().location]",
               "metadata": {
                 "description": "Specifies the Azure location where the resource should be created."
-              },
-              "defaultValue": "[resourceGroup().location]"
+              }
             },
             "policyname": {
               "type": "string",
@@ -395,12 +425,12 @@
             },
             "dnsservers": {
               "type": "array",
-              "metadata": {
-                "description": "Specify custom DNS Servers for Azure Firewall"
-              },
               "defaultValue": [
                 "168.63.129.16"
-              ]
+              ],
+              "metadata": {
+                "description": "Specify custom DNS Servers for Azure Firewall"
+              }
             }
           },
           "functions": [],
@@ -453,6 +483,13 @@
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "1770182106391496481"
+            }
+          },
           "parameters": {
             "fwpolicyname": {
               "type": "string",
@@ -580,13 +617,20 @@
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "9288340550591714856"
+            }
+          },
           "parameters": {
             "location": {
               "type": "string",
+              "defaultValue": "[resourceGroup().location]",
               "metadata": {
                 "description": "Specifies the Azure location where the resource should be created."
-              },
-              "defaultValue": "[resourceGroup().location]"
+              }
             },
             "loganalyticsprefix": {
               "type": "string"
@@ -651,13 +695,20 @@
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "3392524423703578903"
+            }
+          },
           "parameters": {
             "location": {
               "type": "string",
+              "defaultValue": "[resourceGroup().location]",
               "metadata": {
                 "description": "Specifies the Azure location where the Azure Firewall should be created."
-              },
-              "defaultValue": "[resourceGroup().location]"
+              }
             },
             "fwname": {
               "type": "string",
@@ -679,10 +730,10 @@
             },
             "fwpublicipcount": {
               "type": "int",
+              "defaultValue": 2,
               "metadata": {
                 "description": "Specifies the number of public IPs to allocate to the firewall"
-              },
-              "defaultValue": 2
+              }
             }
           },
           "functions": [],
@@ -757,13 +808,20 @@
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "13345309603240881240"
+            }
+          },
           "parameters": {
             "location": {
               "type": "string",
+              "defaultValue": "[resourceGroup().location]",
               "metadata": {
                 "description": "Specifies the Azure location where the resource should be created."
-              },
-              "defaultValue": "[resourceGroup().location]"
+              }
             },
             "fwname": {
               "type": "string",
@@ -857,6 +915,13 @@
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "10727559403358131776"
+            }
+          },
           "parameters": {
             "hubname": {
               "type": "string",
@@ -949,6 +1014,13 @@
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "10727559403358131776"
+            }
+          },
           "parameters": {
             "hubname": {
               "type": "string",
@@ -1026,13 +1098,20 @@
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "18057158569101034526"
+            }
+          },
           "parameters": {
             "location": {
               "type": "string",
+              "defaultValue": "[resourceGroup().location]",
               "metadata": {
                 "description": "Specifies the Azure location where the resource should be created."
-              },
-              "defaultValue": "[resourceGroup().location]"
+              }
             },
             "hubvpngwname": {
               "type": "string",
@@ -1110,13 +1189,20 @@
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "3095208622285270001"
+            }
+          },
           "parameters": {
             "location": {
               "type": "string",
+              "defaultValue": "[resourceGroup().location]",
               "metadata": {
                 "description": "Specifies the Azure location where the NSG should be created."
-              },
-              "defaultValue": "[resourceGroup().location]"
+              }
             },
             "nsgname": {
               "type": "string",
@@ -1167,13 +1253,20 @@
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "8173349593509108640"
+            }
+          },
           "parameters": {
             "location": {
               "type": "string",
+              "defaultValue": "[resourceGroup().location]",
               "metadata": {
                 "description": "Specifies the Azure location where the NSG should be created."
-              },
-              "defaultValue": "[resourceGroup().location]"
+              }
             },
             "nsgname": {
               "type": "string",
@@ -1324,13 +1417,20 @@
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "17358096340998007432"
+            }
+          },
           "parameters": {
             "location": {
               "type": "string",
+              "defaultValue": "[resourceGroup().location]",
               "metadata": {
                 "description": "Specifies the Azure location where the resource should be created."
-              },
-              "defaultValue": "[resourceGroup().location]"
+              }
             },
             "vnetname": {
               "type": "string",
@@ -1340,10 +1440,10 @@
             },
             "addressprefix": {
               "type": "string",
+              "defaultValue": "10.0.1.0/24",
               "metadata": {
                 "description": "Specifies the VNet Address Prefix."
-              },
-              "defaultValue": "10.0.1.0/24"
+              }
             },
             "dnsservers": {
               "type": "string",
@@ -1353,17 +1453,17 @@
             },
             "serversubnetprefix": {
               "type": "string",
+              "defaultValue": "10.0.1.0/26",
               "metadata": {
                 "description": "Specifies the Subnet Address Prefix for the server subnet"
-              },
-              "defaultValue": "10.0.1.0/26"
+              }
             },
             "bastionsubnetprefix": {
               "type": "string",
+              "defaultValue": "10.0.1.64/26",
               "metadata": {
                 "description": "Specifies the Subnet Address Prefix for the bastion subnet"
-              },
-              "defaultValue": "10.0.1.64/26"
+              }
             },
             "servernsgid": {
               "type": "string",
@@ -1445,6 +1545,95 @@
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2019-10-01",
+      "name": "spokednszonedeploy",
+      "resourceGroup": "[format('{0}-spoke1-rg', parameters('nameprefix'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "zoneName": {
+            "value": "[variables('spokednszonename')]"
+          },
+          "vnetLinks": {
+            "value": [
+              {
+                "vnetId": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-spoke1-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'spokevnetdeploy'), '2019-10-01').outputs.id.value]",
+                "linkName": "spoke-registration",
+                "registrationEnabled": true
+              },
+              {
+                "vnetId": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-onprem-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'onpremvnetdeploy'), '2019-10-01').outputs.id.value]",
+                "linkName": "onprem-link",
+                "registrationEnabled": false
+              }
+            ]
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "9283419315670758204"
+            }
+          },
+          "parameters": {
+            "zoneName": {
+              "type": "string"
+            },
+            "vnetLinks": {
+              "type": "array"
+            }
+          },
+          "functions": [],
+          "resources": [
+            {
+              "type": "Microsoft.Network/privateDnsZones",
+              "apiVersion": "2020-06-01",
+              "name": "[parameters('zoneName')]",
+              "location": "global"
+            },
+            {
+              "copy": {
+                "name": "vnetLink",
+                "count": "[length(parameters('vnetLinks'))]"
+              },
+              "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+              "apiVersion": "2020-06-01",
+              "name": "[format('{0}/{1}', parameters('zoneName'), parameters('vnetLinks')[copyIndex()].linkName)]",
+              "location": "global",
+              "properties": {
+                "registrationEnabled": "[parameters('vnetLinks')[copyIndex()].registrationEnabled]",
+                "virtualNetwork": {
+                  "id": "[parameters('vnetLinks')[copyIndex()].vnetId]"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', parameters('zoneName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "resourceId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/privateDnsZones', parameters('zoneName'))]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-onprem-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'onpremvnetdeploy')]",
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', format('{0}-spoke1-rg', parameters('nameprefix')))]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-spoke1-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'spokevnetdeploy')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
       "name": "hubvnetconnectiondeploy",
       "resourceGroup": "[format('{0}-vwan-rg', parameters('nameprefix'))]",
       "properties": {
@@ -1469,6 +1658,13 @@
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "6412326298403693621"
+            }
+          },
           "parameters": {
             "hubname": {
               "type": "string",
@@ -1558,13 +1754,20 @@
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "7733347399605526317"
+            }
+          },
           "parameters": {
             "location": {
               "type": "string",
+              "defaultValue": "[resourceGroup().location]",
               "metadata": {
                 "description": "Specifies the Azure location where the Bastion service should be created."
-              },
-              "defaultValue": "[resourceGroup().location]"
+              }
             },
             "bastionname": {
               "type": "string",
@@ -1661,13 +1864,20 @@
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "2151486191693724535"
+            }
+          },
           "parameters": {
             "location": {
               "type": "string",
+              "defaultValue": "[resourceGroup().location]",
               "metadata": {
                 "description": "Specifies the Azure location where the VM should be created."
-              },
-              "defaultValue": "[resourceGroup().location]"
+              }
             },
             "vmname": {
               "type": "string",
@@ -1695,10 +1905,10 @@
             },
             "adminusername": {
               "type": "string",
+              "defaultValue": "sysadmin",
               "metadata": {
                 "description": "The local admin user name for the deployed servers"
-              },
-              "defaultValue": "sysadmin"
+              }
             },
             "adminpassword": {
               "type": "secureString",
@@ -1708,10 +1918,10 @@
             },
             "windowsosversion": {
               "type": "string",
+              "defaultValue": "2019-Datacenter",
               "metadata": {
                 "description": "The Windows version for the VM. This will pick a fully patched image of this given Windows version."
               },
-              "defaultValue": "2019-Datacenter",
               "allowedValues": [
                 "2016-Datacenter",
                 "2019-Datacenter"
@@ -1719,10 +1929,10 @@
             },
             "vmsize": {
               "type": "string",
+              "defaultValue": "Standard_D2_v3",
               "metadata": {
                 "description": "Size of the VM."
-              },
-              "defaultValue": "Standard_D2_v3"
+              }
             }
           },
           "functions": [],
@@ -1863,13 +2073,20 @@
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "7282571540254254767"
+            }
+          },
           "parameters": {
             "location": {
               "type": "string",
+              "defaultValue": "[resourceGroup().location]",
               "metadata": {
                 "description": "Specifies the Azure location where the resource should be created."
-              },
-              "defaultValue": "[resourceGroup().location]"
+              }
             },
             "vnetname": {
               "type": "string",
@@ -1879,10 +2096,10 @@
             },
             "addressprefix": {
               "type": "string",
+              "defaultValue": "10.0.1.0/24",
               "metadata": {
                 "description": "Specifies the VNet Address Prefix."
-              },
-              "defaultValue": "10.0.1.0/24"
+              }
             },
             "dnsservers": {
               "type": "string",
@@ -1892,31 +2109,31 @@
             },
             "serversubnetprefix": {
               "type": "string",
+              "defaultValue": "10.0.1.0/26",
               "metadata": {
                 "description": "Specifies the Subnet Address Prefix for the server subnet"
-              },
-              "defaultValue": "10.0.1.0/26"
+              }
             },
             "bastionsubnetprefix": {
               "type": "string",
+              "defaultValue": "10.0.1.64/26",
               "metadata": {
                 "description": "Specifies the Subnet Address Prefix for the bastion subnet"
-              },
-              "defaultValue": "10.0.1.64/26"
+              }
             },
             "gatewaysubnetprefix": {
               "type": "string",
+              "defaultValue": "10.0.1.128/26",
               "metadata": {
                 "description": "Specifies the Subnet Address Prefix for the GatewaySubnet"
-              },
-              "defaultValue": "10.0.1.128/26"
+              }
             },
             "firewallsubnetprefix": {
               "type": "string",
+              "defaultValue": "10.0.1.192/26",
               "metadata": {
                 "description": "Specifies the Subnet Address Prefix for the AzureFirewallSubnet"
-              },
-              "defaultValue": "10.0.1.192/26"
+              }
             },
             "servernsgid": {
               "type": "string",
@@ -2018,6 +2235,95 @@
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2019-10-01",
+      "name": "onpremdnszonedeploy",
+      "resourceGroup": "[format('{0}-onprem-rg', parameters('nameprefix'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "zoneName": {
+            "value": "[variables('onpremdnszonename')]"
+          },
+          "vnetLinks": {
+            "value": [
+              {
+                "vnetId": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-spoke1-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'spokevnetdeploy'), '2019-10-01').outputs.id.value]",
+                "linkName": "spoke-link",
+                "registrationEnabled": false
+              },
+              {
+                "vnetId": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-onprem-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'onpremvnetdeploy'), '2019-10-01').outputs.id.value]",
+                "linkName": "onprem-registration",
+                "registrationEnabled": true
+              }
+            ]
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "9283419315670758204"
+            }
+          },
+          "parameters": {
+            "zoneName": {
+              "type": "string"
+            },
+            "vnetLinks": {
+              "type": "array"
+            }
+          },
+          "functions": [],
+          "resources": [
+            {
+              "type": "Microsoft.Network/privateDnsZones",
+              "apiVersion": "2020-06-01",
+              "name": "[parameters('zoneName')]",
+              "location": "global"
+            },
+            {
+              "copy": {
+                "name": "vnetLink",
+                "count": "[length(parameters('vnetLinks'))]"
+              },
+              "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+              "apiVersion": "2020-06-01",
+              "name": "[format('{0}/{1}', parameters('zoneName'), parameters('vnetLinks')[copyIndex()].linkName)]",
+              "location": "global",
+              "properties": {
+                "registrationEnabled": "[parameters('vnetLinks')[copyIndex()].registrationEnabled]",
+                "virtualNetwork": {
+                  "id": "[parameters('vnetLinks')[copyIndex()].vnetId]"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', parameters('zoneName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "resourceId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/privateDnsZones', parameters('zoneName'))]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', format('{0}-onprem-rg', parameters('nameprefix')))]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-onprem-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'onpremvnetdeploy')]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-spoke1-rg', parameters('nameprefix'))), 'Microsoft.Resources/deployments', 'spokevnetdeploy')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
       "name": "onpremservernsgdeploy",
       "resourceGroup": "[format('{0}-onprem-rg', parameters('nameprefix'))]",
       "properties": {
@@ -2036,13 +2342,20 @@
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "3095208622285270001"
+            }
+          },
           "parameters": {
             "location": {
               "type": "string",
+              "defaultValue": "[resourceGroup().location]",
               "metadata": {
                 "description": "Specifies the Azure location where the NSG should be created."
-              },
-              "defaultValue": "[resourceGroup().location]"
+              }
             },
             "nsgname": {
               "type": "string",
@@ -2093,13 +2406,20 @@
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "8173349593509108640"
+            }
+          },
           "parameters": {
             "location": {
               "type": "string",
+              "defaultValue": "[resourceGroup().location]",
               "metadata": {
                 "description": "Specifies the Azure location where the NSG should be created."
-              },
-              "defaultValue": "[resourceGroup().location]"
+              }
             },
             "nsgname": {
               "type": "string",
@@ -2250,13 +2570,20 @@
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "2151486191693724535"
+            }
+          },
           "parameters": {
             "location": {
               "type": "string",
+              "defaultValue": "[resourceGroup().location]",
               "metadata": {
                 "description": "Specifies the Azure location where the VM should be created."
-              },
-              "defaultValue": "[resourceGroup().location]"
+              }
             },
             "vmname": {
               "type": "string",
@@ -2284,10 +2611,10 @@
             },
             "adminusername": {
               "type": "string",
+              "defaultValue": "sysadmin",
               "metadata": {
                 "description": "The local admin user name for the deployed servers"
-              },
-              "defaultValue": "sysadmin"
+              }
             },
             "adminpassword": {
               "type": "secureString",
@@ -2297,10 +2624,10 @@
             },
             "windowsosversion": {
               "type": "string",
+              "defaultValue": "2019-Datacenter",
               "metadata": {
                 "description": "The Windows version for the VM. This will pick a fully patched image of this given Windows version."
               },
-              "defaultValue": "2019-Datacenter",
               "allowedValues": [
                 "2016-Datacenter",
                 "2019-Datacenter"
@@ -2308,10 +2635,10 @@
             },
             "vmsize": {
               "type": "string",
+              "defaultValue": "Standard_D2_v3",
               "metadata": {
                 "description": "Size of the VM."
-              },
-              "defaultValue": "Standard_D2_v3"
+              }
             }
           },
           "functions": [],
@@ -2434,13 +2761,20 @@
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "15480235505369043444"
+            }
+          },
           "parameters": {
             "location": {
               "type": "string",
+              "defaultValue": "[resourceGroup().location]",
               "metadata": {
                 "description": "Specifies the Azure location where the resource should be created."
-              },
-              "defaultValue": "[resourceGroup().location]"
+              }
             },
             "vpngwpipname": {
               "type": "string",
@@ -2567,6 +2901,13 @@
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "963153380214003177"
+            }
+          },
           "parameters": {
             "vpnsitename": {
               "type": "string",
@@ -2576,10 +2917,10 @@
             },
             "location": {
               "type": "string",
+              "defaultValue": "[resourceGroup().location]",
               "metadata": {
                 "description": "Specifies the Azure location where the vpnsite should be created."
-              },
-              "defaultValue": "[resourceGroup().location]"
+              }
             },
             "addressprefix": {
               "type": "string",
@@ -2672,6 +3013,13 @@
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "16943105122741399416"
+            }
+          },
           "parameters": {
             "hubvpngwname": {
               "type": "string",
@@ -2752,6 +3100,13 @@
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "12959420844498343780"
+            }
+          },
           "parameters": {
             "localnetworkgwname": {
               "type": "string",
@@ -2761,10 +3116,10 @@
             },
             "location": {
               "type": "string",
+              "defaultValue": "[resourceGroup().location]",
               "metadata": {
                 "description": "Specifies the Azure location where the resources should be created."
-              },
-              "defaultValue": "[resourceGroup().location]"
+              }
             },
             "addressprefixes": {
               "type": "array",
