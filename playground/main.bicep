@@ -4,12 +4,16 @@ param location string = 'westeurope'
 param clientId string = '41b23e61-6c1e-4545-b367-cd054e0ed4b4'
 param tenantId string = 'd259a616-4e9d-4615-b83d-2e09a6636fd4'
 
+@secure()
+param adminPassword string
+
 // Load VWAN Playground Config file
 var vwanConfig = json(loadTextContent('./configs/contoso.json'))
 
 // Resource naming
 var namePrefix = vwanConfig.namePrefix
 var vwanName = '${namePrefix}-vwan'
+/*
 
 // Resource Group
 resource vwanRg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
@@ -17,6 +21,7 @@ resource vwanRg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   location: location
 }
 
+// VWAN
 module vwan 'modules/virtualWans.bicep' = {
   scope: vwanRg
   name: 'vwan-deploy'
@@ -103,5 +108,31 @@ module p2svpnGateways 'modules/p2svpnGateways.bicep' = [for (region, i) in vwanC
     vpnServerConfigurationId: vpnServerConfigurations.outputs.resourceId
     p2sVpnGwName: '${virtualHubs[i].outputs.resourceName}-p2sgw'
     addressPrefixes: region.p2sConfig.p2sAddressPrefixes
+  }
+}]
+*/
+// Landing Zones
+
+resource landingZoneRg 'Microsoft.Resources/resourceGroups@2021-04-01' = [for (landingZone, i) in vwanConfig.landingZones: {
+  name: '${namePrefix}-${landingZone.name}-rg'
+  location: landingZone.location
+}]
+
+module landingZoneVnet 'modules/landingZones/virtualNetworks.bicep' = [for (landingZone, i) in vwanConfig.landingZones: {
+  name: '${landingZone.name}-vnet-deploy'
+  scope: landingZoneRg[i]
+  params: {
+    addressPrefix: landingZone.addressPrefix
+    vnetName: '${landingZone.name}-vnet' 
+  }
+}]
+
+module landingZoneServer 'modules/landingZones/windowsVM.bicep' = [for (landingZone, i) in vwanConfig.landingZones: {
+  name: '${landingZone.name}-vm-deploy'
+  scope: landingZoneRg[i]
+  params: {
+    vmName: '${landingZone.name}-vm'
+    adminPassword: adminPassword
+    subnetId: landingZoneVnet[i].outputs.subnetId
   }
 }]
