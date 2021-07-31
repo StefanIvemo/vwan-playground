@@ -2,6 +2,8 @@
 
 Welcome to the Azure Virtual WAN Playground repository! Your one-stop shop for an awesome Azure Virtual WAN lab environment.
 
+> [2021-07-31] Virtual WAN Playground was built using early versions of Bicep. I've started building a new improved version using new Bicep features and I will also provide three separate sample environments based on different config files. Although it's work in progress the code can be found in the [vwan-playground-v2](https://github.com/StefanIvemo/vwan-playground/tree/vwan-playground-v2) branch. Enjoy!
+
 ## What is Azure Virtual WAN Playground?
 
 This repo is dedicated for all poor souls out there who want to play around with Azure Virtual WAN but don't have unlimited Azure Credit in their subscriptions. I've put together a template that deploys Azure Virtual WAN and all resources needed to play around with the service and test everything from VPN, Routing, Secured Virtual Hub, Virtual Network connections and more. The goal is to make it easy to spin up an environment when you need to test a feature for a short period of time and then remove it all when finished.
