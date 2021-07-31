@@ -2,7 +2,7 @@ param gwName string
 param scaleUnits int = 1
 param virtualHubId string
 param tags object = {}
-param location string = resourceGroup().id
+param location string = resourceGroup().location
 
 resource expressRouteGw 'Microsoft.Network/expressRouteGateways@2021-02-01' = {
   name: gwName

@@ -1,5 +1,3 @@
-// 2020-08-01-1
-
 param vnetName string
 param addressPrefixes array = [
   '10.0.0.0/16'

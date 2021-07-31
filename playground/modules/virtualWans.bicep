@@ -1,5 +1,3 @@
-// 2020-08-01-1
-
 param name string
 
 @allowed([
@@ -9,14 +7,6 @@ param name string
 param wanType string = 'Standard'
 param disableVpnEncryption bool = false
 param allowBranchToBranchTraffic bool = true
-
-@allowed([
-  'Optimize'
-  'OptimizeAndAllow'
-  'All'
-  'None'
-])
-param office365LocalBreakoutCategory string = 'None'
 param location string = resourceGroup().location
 
 //Virtaul WAN Resource
@@ -27,7 +17,6 @@ resource vwan 'Microsoft.Network/virtualWans@2020-11-01' = {
     type: wanType
     disableVpnEncryption: disableVpnEncryption
     allowBranchToBranchTraffic: allowBranchToBranchTraffic
-    office365LocalBreakoutCategory: office365LocalBreakoutCategory
   }
 }
 

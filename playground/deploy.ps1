@@ -1,7 +1,7 @@
 $params=@{
-    Name = 'vwan-deploy'
+    Name = 'vwan-deploy3'
     Location = 'westeurope'
-    TemplateFile = 'C:\git\StefanIvemo\vwan-playground\playground\contoso-vwan.bicep'
+    TemplateFile = 'C:\git\StefanIvemo\vwan-playground\playground\main.bicep'
 }
 
 New-AzSubscriptionDeployment @params -Verbose

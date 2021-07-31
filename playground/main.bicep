@@ -1,42 +1,17 @@
 targetScope = 'subscription'
 
-param namePrefix string = 'contoso'
 param location string = 'westeurope'
 param clientId string = '41b23e61-6c1e-4545-b367-cd054e0ed4b4'
 param tenantId string = 'd259a616-4e9d-4615-b83d-2e09a6636fd4'
 
-param regions array = [
-  {
-    location: 'westeurope'
-    hubAddressPrefix: '10.0.0.0/24'
-    deployFw: true
-    deployVpnGw: true
-    deployErGw: true
-    deployP2SGw: true
-    p2sConfig: {
-      p2sAddressPrefix: '10.0.4.0/22'
-    }
-  }
-  {
-    location: 'northeurope'
-    hubAddressPrefix: '10.10.0.0/24'
-    deployFw: true
-    deployVpnGw: false
-    deployErGw: false
-    deployP2SGw: false
-  }
-  {
-    location: 'eastus'
-    hubAddressPrefix: '10.20.0.0/24'
-    deployFw: false
-    deployVpnGw: true
-    deployErGw: false
-    deployP2SGw: false
-  }
-]
+// Load VWAN Playground Config file
+var vwanConfig = json(loadTextContent('./configs/contoso.json'))
 
+// Resource naming
+var namePrefix = vwanConfig.namePrefix
 var vwanName = '${namePrefix}-vwan'
 
+// Resource Group
 resource vwanRg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: '${namePrefix}-vwan-rg'
   location: location
@@ -51,7 +26,7 @@ module vwan 'modules/virtualWans.bicep' = {
   }
 }
 
-module virtualHubs 'modules/virtualHubs.bicep' = [for region in regions: {
+module virtualHubs 'modules/virtualHubs.bicep' = [for region in vwanConfig.regions: {
   scope: vwanRg
   name: 'virtualHubs-${region.location}-deploy'
   params: {
@@ -62,7 +37,7 @@ module virtualHubs 'modules/virtualHubs.bicep' = [for region in regions: {
   }
 }]
 
-module firewallPolicies 'modules/firewallPolicies.bicep' = [for (region, i) in regions: if (region.deployFw) {
+module firewallPolicies 'modules/firewallPolicies.bicep' = [for (region, i) in vwanConfig.regions: if (region.deployFw) {
   scope: vwanRg
   name: 'firewallPolicies-${region.location}-deploy'
   params: {
@@ -72,7 +47,7 @@ module firewallPolicies 'modules/firewallPolicies.bicep' = [for (region, i) in r
   }
 }]
 
-module azureFirewalls 'modules/azureFirewalls.bicep' = [for (region, i) in regions: if (region.deployFw) {
+module azureFirewalls 'modules/azureFirewalls.bicep' = [for (region, i) in vwanConfig.regions: if (region.deployFw) {
   scope: vwanRg
   name: 'azureFirewalls-${region.location}-deploy'
   params: {
@@ -84,7 +59,7 @@ module azureFirewalls 'modules/azureFirewalls.bicep' = [for (region, i) in regio
   }
 }]
 
-module vpnGateways 'modules/vpnGateways.bicep' = [for (region, i) in regions: if (region.deployVpnGw) {
+module vpnGateways 'modules/vpnGateways.bicep' = [for (region, i) in vwanConfig.regions: if (region.deployVpnGw) {
   scope: vwanRg
   name: 'vpnGateways-${region.location}-deploy'
   params: {
@@ -94,12 +69,16 @@ module vpnGateways 'modules/vpnGateways.bicep' = [for (region, i) in regions: if
   }
 }]
 
-module erGateways 'modules/expressRouteGateways.bicep' = [for (region, i) in regions: if (region.deployErGw) {
+module erGateways 'modules/expressRouteGateways.bicep' = [for (region, i) in vwanConfig.regions: if (region.deployErGw) {
   scope: vwanRg
   name: 'erGateways-${region.location}-deploy'
+  dependsOn: [
+    vpnGateways
+  ]
   params: {
     virtualHubId: virtualHubs[i].outputs.resourceId
     gwName: '${virtualHubs[i].outputs.resourceName}-erg'
+    location: region.location
   }
 }]
 
@@ -112,3 +91,17 @@ module vpnServerConfigurations 'modules/vpnServerConfigurations.bicep' = if (!em
     clientId: clientId
   }
 }
+
+module p2svpnGateways 'modules/p2svpnGateways.bicep' = [for (region, i) in vwanConfig.regions: if (region.deployP2SGw) {
+  scope: vwanRg
+  name: 'ps2vpnGateway-${region.location}-deploy'
+  dependsOn: [
+    erGateways
+  ]
+  params: {
+    virtualHubId: virtualHubs[i].outputs.resourceId
+    vpnServerConfigurationId: vpnServerConfigurations.outputs.resourceId
+    p2sVpnGwName: '${virtualHubs[i].outputs.resourceName}-p2sgw'
+    addressPrefixes: region.p2sConfig.p2sAddressPrefixes
+  }
+}]

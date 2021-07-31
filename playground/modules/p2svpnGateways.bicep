@@ -2,18 +2,12 @@ param p2sVpnGwName string
 param location string = resourceGroup().location
 param virtualHubId string
 param vpnServerConfigurationId string
-param associatedRouteTableId string
-param propagatedRouteTablesIds array
 param staticRoutes array = []
 param addressPrefixes array
 param enableInternetSecurity bool = true
-param vpnGatewayScaleUnit int
-param customDnsServers array
+param vpnGatewayScaleUnit int = 1
+param customDnsServers array = []
 param isRoutingPreferenceInternet bool = false
-
-var propagatedRouteTables = [for id in propagatedRouteTablesIds: {
-  id: id
-}]
 
 resource p2sVpnGw 'Microsoft.Network/p2svpnGateways@2020-11-01' = {
   name: p2sVpnGwName
@@ -29,14 +23,7 @@ resource p2sVpnGw 'Microsoft.Network/p2svpnGateways@2020-11-01' = {
       {
         name: 'P2SConnectionConfigDefault'
         properties: {
-          routingConfiguration: {
-            associatedRouteTable: {
-              id: associatedRouteTableId
-            }
-            propagatedRouteTables: {
-              ids: propagatedRouteTables
-              labels: []
-            }
+          routingConfiguration: {            
             vnetRoutes: {
               staticRoutes: staticRoutes
             }

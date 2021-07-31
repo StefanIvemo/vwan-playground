@@ -1,5 +1,3 @@
-// 2020-08-01-1
-
 param name string
 @allowed([
   'Basic'

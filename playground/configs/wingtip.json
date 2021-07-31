@@ -1,0 +1,25 @@
+{
+    "namePrefix": "wingtip",
+    "regions": [
+        {
+            "location": "westeurope",
+            "hubAddressPrefix": "10.0.0.0/24",
+            "deployFw": true,
+            "deployVpnGw": false,
+            "deployErGw": false,
+            "deployP2SGw": true,
+            "p2sConfig": {
+                "p2sAddressPrefix": "10.0.4.0/22"
+            }
+        },
+        {
+            "location": "northeurope",
+            "hubAddressPrefix": "10.10.0.0/24",
+            "deployFw": true,
+            "deployVpnGw": false,
+            "deployErGw": false,
+            "deployP2SGw": false
+        }
+    ],
+    "onPremLocations": []
+}
