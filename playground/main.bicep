@@ -13,7 +13,7 @@ var vwanConfig = json(loadTextContent('./configs/contoso.json'))
 // Resource naming
 var namePrefix = vwanConfig.namePrefix
 var vwanName = '${namePrefix}-vwan'
-/*
+
 
 // Resource Group
 resource vwanRg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
@@ -110,7 +110,7 @@ module p2svpnGateways 'modules/p2svpnGateways.bicep' = [for (region, i) in vwanC
     addressPrefixes: region.p2sConfig.p2sAddressPrefixes
   }
 }]
-*/
+
 // Landing Zones
 
 resource landingZoneRg 'Microsoft.Resources/resourceGroups@2021-04-01' = [for (landingZone, i) in vwanConfig.landingZones: {
