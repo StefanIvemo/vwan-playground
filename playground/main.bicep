@@ -14,7 +14,6 @@ var vwanConfig = json(loadTextContent('./configs/contoso.json'))
 var namePrefix = vwanConfig.namePrefix
 var vwanName = '${namePrefix}-vwan'
 
-
 // Resource Group
 resource vwanRg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: '${namePrefix}-vwan-rg'
@@ -59,7 +58,7 @@ module azureFirewalls 'modules/azureFirewalls.bicep' = [for (region, i) in vwanC
     name: '${vwan.outputs.name}-${region.location}-vhub-azfw'
     hubId: virtualHubs[i].outputs.resourceId
     location: region.location
-    fwPolicyId: firewallPolicies[i].outputs.childResourceId
+    fwPolicyId: region.deployFw ? firewallPolicies[i].outputs.childResourceId : ''
     publicIPsCount: 1
   }
 }]
@@ -112,27 +111,82 @@ module p2svpnGateways 'modules/p2svpnGateways.bicep' = [for (region, i) in vwanC
 }]
 
 // Landing Zones
-
-resource landingZoneRg 'Microsoft.Resources/resourceGroups@2021-04-01' = [for (landingZone, i) in vwanConfig.landingZones: {
-  name: '${namePrefix}-${landingZone.name}-rg'
-  location: landingZone.location
+resource landingZoneRg 'Microsoft.Resources/resourceGroups@2021-04-01' = [for (region, i) in vwanConfig.regions: {
+  name: '${namePrefix}-${region.landingZones.name}-rg'
+  location: region.location
 }]
 
-module landingZoneVnet 'modules/landingZones/virtualNetworks.bicep' = [for (landingZone, i) in vwanConfig.landingZones: {
-  name: '${landingZone.name}-vnet-deploy'
+module landingZoneVnet 'modules/landingZones/virtualNetworks.bicep' = [for (region, i) in vwanConfig.regions: {
+  name: '${region.landingZones.name}-vnet-deploy'
   scope: landingZoneRg[i]
   params: {
-    addressPrefix: landingZone.addressPrefix
-    vnetName: '${landingZone.name}-vnet' 
+    addressPrefix: region.landingZones.addressPrefix
+    vnetName: '${region.landingZones.name}-vnet'
   }
 }]
 
-module landingZoneServer 'modules/landingZones/windowsVM.bicep' = [for (landingZone, i) in vwanConfig.landingZones: {
-  name: '${landingZone.name}-vm-deploy'
+module landingZoneServer 'modules/landingZones/windowsVM.bicep' = [for (region, i) in vwanConfig.regions: {
+  name: '${region.landingZones.name}-vm-deploy'
   scope: landingZoneRg[i]
   params: {
-    vmName: '${landingZone.name}-vm'
+    vmName: '${region.landingZones.name}-vm'
     adminPassword: adminPassword
     subnetId: landingZoneVnet[i].outputs.subnetId
   }
 }]
+
+// Landing Zone Route Table
+module lzRouteTable 'modules/hubRouteTables.bicep' = [for (region, i) in vwanConfig.regions: {
+  scope: vwanRg
+  name: 'lzRouteTable-${region.location}-deploy'
+  params: {
+    hubName: virtualHubs[i].outputs.resourceName
+    labels: [
+      'landingzone'
+    ]
+    routes: region.deployFw ? [
+      {
+        name: 'nextHopFW'
+        destinationType: 'CIDR'
+        destinations: [
+          '0.0.0.0/0'
+        ]
+        nextHopType: 'ResourceId'
+        nextHop: region.deployFw ? azureFirewalls[i].outputs.resourceId : ''
+      }
+    ] : []
+    routeTableName: '${region.location}-lzRouteTable'
+  }
+}]
+
+// Get built-in route tableIds
+module builtInRouteTables 'modules/defaultRouteTable.bicep' = [for (region, i) in vwanConfig.regions: {
+  scope: vwanRg
+  name: 'defaultRouteTable-${region.location}-Ids'
+  params: {
+    hubName: virtualHubs[i].outputs.resourceName
+  }
+}]
+
+// Landing Zone VNet Connection. If VHub has a firewall apply landing zone route table otherwise use the default
+module lzVNetConnection 'modules/hubVirtualNetworkConnections.bicep' = [for (region, i) in vwanConfig.regions: {
+  scope: vwanRg
+  name: '${region.landingZones.name}-vnet-conn-deploy'
+  params: {
+    hubName: '${vwan.outputs.name}-${region.location}-vhub'  
+    associatedRouteTableId: region.deployFw ? lzRouteTable[i].outputs.resourceId : builtInRouteTables[i].outputs.defaultRouteTableResourceId
+    propagatedRouteTableIds: region.deployFw ? [
+      builtInRouteTables[i].outputs.noneRouteTableResourceId
+    ] : [
+      builtInRouteTables[i].outputs.defaultRouteTableResourceId
+    ]
+    propagatedRouteTableLabels: region.deployFw ? [
+      'none'
+    ] : [
+      'default'
+    ]
+    vnetId: landingZoneVnet[i].outputs.resourceId
+    connectionName: 'peeredTo-${region.landingZones.name}-vnet'
+  }
+}]
+

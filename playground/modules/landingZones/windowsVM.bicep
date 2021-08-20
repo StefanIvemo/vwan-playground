@@ -1,4 +1,5 @@
 param location string = resourceGroup().location
+@maxLength(15)
 param vmName string
 param subnetId string
 param adminUserName string = 'sysadmin'

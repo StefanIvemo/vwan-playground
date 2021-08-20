@@ -38,3 +38,4 @@ resource vnet 'Microsoft.Network/virtualNetworks@2020-08-01' = {
 }
 
 output subnetId string = vnet.properties.subnets[0].id
+output resourceId string = vnet.id

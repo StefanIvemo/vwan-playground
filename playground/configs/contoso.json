@@ -1,5 +1,5 @@
 {
-    "namePrefix": "contoso3",
+    "namePrefix": "newContoso",
     "regions": [
         {
             "location": "westeurope",
@@ -12,6 +12,10 @@
                 "p2sAddressPrefixes": [
                     "10.0.4.0/22"
                 ]
+            },
+            "landingZones": {
+                "name": "weu-lz1",
+                "addressPrefix": "10.0.10.0/24"
             }
         },
         {
@@ -20,7 +24,11 @@
             "deployFw": true,
             "deployVpnGw": false,
             "deployErGw": false,
-            "deployP2SGw": false
+            "deployP2SGw": false,
+            "landingZones": {
+                "name": "neu-lz1",
+                "addressPrefix": "10.10.10.0/24"
+            }
         },
         {
             "location": "eastus",
@@ -28,19 +36,11 @@
             "deployFw": false,
             "deployVpnGw": true,
             "deployErGw": false,
-            "deployP2SGw": false
-        }
-    ],
-    "landingZones": [
-        {
-            "name": "landingzone1",
-            "location": "westeurope",
-            "addressPrefix": "10.0.10.0/24"
-        },
-        {
-            "name": "landingzone2",
-            "location": "eastus",
-            "addressPrefix": "10.20.10.0/24"
+            "deployP2SGw": false,
+            "landingZones": {
+                "name": "eus-lz1",
+                "addressPrefix": "10.20.10.0/24"
+            }
         }
     ],
     "onPremLocations": [
