@@ -98,7 +98,7 @@ module vpnServerConfigurations 'modules/vpnServerConfigurations.bicep' = if (!em
 
 module p2svpnGateways 'modules/p2svpnGateways.bicep' = [for (region, i) in vwanConfig.regions: if (region.deployP2SGw) {
   scope: vwanRg
-  name: 'ps2vpnGateway-${region.location}-deploy'
+  name: 'p2svpnGateway-${region.location}-deploy'
   dependsOn: [
     erGateways
   ]
