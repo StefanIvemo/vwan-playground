@@ -1,14 +1,18 @@
 targetScope = 'subscription'
 
 param location string = 'westeurope'
-param clientId string = '41b23e61-6c1e-4545-b367-cd054e0ed4b4'
-param tenantId string = 'd259a616-4e9d-4615-b83d-2e09a6636fd4'
+
 
 @secure()
 param adminPassword string
 
 // Load VWAN Playground Config file
 var vwanConfig = json(loadTextContent('./configs/contoso.json'))
+
+// Load P2S AAD Auth Config file
+var p2sAuthConfig = json(loadTextContent('./configs/p2sVpnAADAuth.json'))
+var clientId = p2sAuthConfig.clientId
+var tenantId = p2sAuthConfig.tenantId
 
 // Resource naming
 var namePrefix = vwanConfig.namePrefix

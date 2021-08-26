@@ -1,5 +1,4 @@
 param name string
-
 @allowed([
   'Standard'
   'Basic'
