@@ -269,22 +269,21 @@ module vpnConnection 'modules/vpnConnections.bicep' = [for (site, i) in vwanConf
   params: {
     hubs: hubs
     vpnSiteId: vpnSites[i].outputs.resourceId
-    siteName:  vpnSites[i].outputs.resourceName
+    siteName: vpnSites[i].outputs.resourceName
     psk: psk
   }
 }]
 
-
-// module hubtoonprems2s './VNetVPNSiteToSite.bicep' = {
-//   name: 'hubtoonprems2sdeploy'
-//   scope: resourceGroup(onpremrg.name)
-//   params:{
-//     localnetworkgwname: 'onprem-to-vhub-cn'
-//     location: location
-//     vpngwid: onpremvpngw.outputs.id
-//     gwipaddress: hubvpngw.outputs.gwpublicip
-//     bgppeeringpddress: hubvpngw.outputs.gwprivateip
-//     addressprefixes: onprems2saddressprefixes
+// module siteToSite 'modules/siteToSite.bicep' = [for (site, i) in vwanConfig.onPremSites: {
+//   name: 'site-${site.location}-s2s-deploy'
+//   scope: onPremRG[i]
+//   params: {
+//     connectionName: 'site-${site.location}-to-hub-con'
+//     vpnDeviceIpAddress:   
+//     bgpPeeringAddress: 
 //     psk: psk
+//     addressPrefixes: 
+//     vpnGwId: onPremVPNGw[i].outputs.resourceId
+//     lgwName: 
 //   }
-// }
+// }]
