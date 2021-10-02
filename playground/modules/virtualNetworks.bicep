@@ -1,8 +1,12 @@
 param vnetName string
-param addressPrefix string 
+param addressPrefix string
 param dnsServers array = []
 param tags object = {}
 param location string = resourceGroup().location
+
+// Create subnet address prefixes from VNet address prefix
+var serverPrefix = '${split(addressPrefix, '.')[0]}.${split(addressPrefix, '.')[1]}.${split(addressPrefix, '.')[2]}.0/26'
+var gatewayPrefix = '${split(addressPrefix, '.')[0]}.${split(addressPrefix, '.')[1]}.${split(addressPrefix, '.')[2]}.64/26'
 
 resource nsg 'Microsoft.Network/networkSecurityGroups@2021-02-01' = {
   name: '${vnetName}-snet-servers-nsg'
@@ -21,21 +25,28 @@ resource vnet 'Microsoft.Network/virtualNetworks@2020-08-01' = {
     }
     dhcpOptions: {
       dnsServers: dnsServers
-    }    
+    }
     subnets: [
       {
         name: 'snet-servers'
         properties: {
-          addressPrefix: addressPrefix
-          
+          addressPrefix: serverPrefix
           networkSecurityGroup: {
             id: nsg.id
           }
+        }
+      }
+      {
+        name: 'GatewaySubnet'
+        properties: {
+          addressPrefix: gatewayPrefix
         }
       }
     ]
   }
 }
 
-output subnetId string = vnet.properties.subnets[0].id
+output vnetName string = vnet.name
+output serverSubnetId string = vnet.properties.subnets[0].id
+output gwSubnetId string = vnet.properties.subnets[1].id
 output resourceId string = vnet.id

@@ -1,12 +1,10 @@
 targetScope = 'subscription'
 
 param location string = 'westeurope'
-
-
 @secure()
-param adminPassword string
+param vmAdminPassword string
 
-// Load VWAN Playground Config file
+// Load VWAN Playground Config file. 
 var vwanConfig = json(loadTextContent('./configs/contoso.json'))
 
 // Load P2S AAD Auth Config file
@@ -25,6 +23,7 @@ resource vwanRg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
 }
 
 // VWAN
+// Deploy Virtual VWAN
 module vwan 'modules/virtualWans.bicep' = {
   scope: vwanRg
   name: 'vwan-deploy'
@@ -34,6 +33,7 @@ module vwan 'modules/virtualWans.bicep' = {
   }
 }
 
+// Deploy Virtual Hubs
 module virtualHubs 'modules/virtualHubs.bicep' = [for region in vwanConfig.regions: {
   scope: vwanRg
   name: 'virtualHubs-${region.location}-deploy'
@@ -45,6 +45,7 @@ module virtualHubs 'modules/virtualHubs.bicep' = [for region in vwanConfig.regio
   }
 }]
 
+// Deploy Firewall Policies for Firewall enabled hubs
 module firewallPolicies 'modules/firewallPolicies.bicep' = [for (region, i) in vwanConfig.regions: if (region.deployFw) {
   scope: vwanRg
   name: 'firewallPolicies-${region.location}-deploy'
@@ -55,6 +56,7 @@ module firewallPolicies 'modules/firewallPolicies.bicep' = [for (region, i) in v
   }
 }]
 
+// Deploy Firewalls for firewall enabled hubs
 module azureFirewalls 'modules/azureFirewalls.bicep' = [for (region, i) in vwanConfig.regions: if (region.deployFw) {
   scope: vwanRg
   name: 'azureFirewalls-${region.location}-deploy'
@@ -67,6 +69,7 @@ module azureFirewalls 'modules/azureFirewalls.bicep' = [for (region, i) in vwanC
   }
 }]
 
+// Deploy VPN Gateway for VPN enabled hubs
 module vpnGateways 'modules/vpnGateways.bicep' = [for (region, i) in vwanConfig.regions: if (region.deployVpnGw) {
   scope: vwanRg
   name: 'vpnGateways-${region.location}-deploy'
@@ -77,6 +80,7 @@ module vpnGateways 'modules/vpnGateways.bicep' = [for (region, i) in vwanConfig.
   }
 }]
 
+// Deploy ExpressRoute Gateways for ExpressRoute enabled hubs
 module erGateways 'modules/expressRouteGateways.bicep' = [for (region, i) in vwanConfig.regions: if (region.deployErGw) {
   scope: vwanRg
   name: 'erGateways-${region.location}-deploy'
@@ -90,6 +94,7 @@ module erGateways 'modules/expressRouteGateways.bicep' = [for (region, i) in vwa
   }
 }]
 
+// Deploy User VPN Configuration if clientId and tenantId is provided
 module vpnServerConfigurations 'modules/vpnServerConfigurations.bicep' = if (!empty(clientId) && !empty(tenantId)) {
   scope: vwanRg
   name: 'vpnServerConfigurations-deploy'
@@ -100,6 +105,7 @@ module vpnServerConfigurations 'modules/vpnServerConfigurations.bicep' = if (!em
   }
 }
 
+// Deploy Point-to-site Gateways for P2S enabled hubs
 module p2svpnGateways 'modules/p2svpnGateways.bicep' = [for (region, i) in vwanConfig.regions: if (region.deployP2SGw) {
   scope: vwanRg
   name: 'p2svpnGateway-${region.location}-deploy'
@@ -115,12 +121,14 @@ module p2svpnGateways 'modules/p2svpnGateways.bicep' = [for (region, i) in vwanC
 }]
 
 // Landing Zones
+// Deploy "landing zone" resource groups
 resource landingZoneRg 'Microsoft.Resources/resourceGroups@2021-04-01' = [for (region, i) in vwanConfig.regions: {
   name: '${namePrefix}-${region.landingZones.name}-rg'
   location: region.location
 }]
 
-module landingZoneVnet 'modules/landingZones/virtualNetworks.bicep' = [for (region, i) in vwanConfig.regions: {
+// Deploy "landing zone" VNets
+module landingZoneVnet 'modules/virtualNetworks.bicep' = [for (region, i) in vwanConfig.regions: {
   name: '${region.landingZones.name}-vnet-deploy'
   scope: landingZoneRg[i]
   params: {
@@ -129,17 +137,18 @@ module landingZoneVnet 'modules/landingZones/virtualNetworks.bicep' = [for (regi
   }
 }]
 
-module landingZoneServer 'modules/landingZones/windowsVM.bicep' = [for (region, i) in vwanConfig.regions: {
+// Deploy "landing zone" servers
+module landingZoneServer 'modules/windowsVM.bicep' = [for (region, i) in vwanConfig.regions: {
   name: '${region.landingZones.name}-vm-deploy'
   scope: landingZoneRg[i]
   params: {
     vmName: '${region.landingZones.name}-vm'
-    adminPassword: adminPassword
-    subnetId: landingZoneVnet[i].outputs.subnetId
+    adminPassword: vmAdminPassword
+    subnetId: landingZoneVnet[i].outputs.serverSubnetId
   }
 }]
 
-// Landing Zone Route Table
+// Deploy Virtual Hub Route tables for Landing Zones
 module lzRouteTable 'modules/hubRouteTables.bicep' = [for (region, i) in vwanConfig.regions: {
   scope: vwanRg
   name: 'lzRouteTable-${region.location}-deploy'
@@ -172,12 +181,12 @@ module builtInRouteTables 'modules/defaultRouteTable.bicep' = [for (region, i) i
   }
 }]
 
-// Landing Zone VNet Connection. If VHub has a firewall apply landing zone route table otherwise use the default
+// Landing Zone VNet Connection. If the hub has a firewall apply landing zone route table otherwise use the default
 module lzVNetConnection 'modules/hubVirtualNetworkConnections.bicep' = [for (region, i) in vwanConfig.regions: {
   scope: vwanRg
   name: '${region.landingZones.name}-vnet-conn-deploy'
   params: {
-    hubName: '${vwan.outputs.name}-${region.location}-vhub'  
+    hubName: '${vwan.outputs.name}-${region.location}-vhub'
     associatedRouteTableId: region.deployFw ? lzRouteTable[i].outputs.resourceId : builtInRouteTables[i].outputs.defaultRouteTableResourceId
     propagatedRouteTableIds: region.deployFw ? [
       builtInRouteTables[i].outputs.noneRouteTableResourceId
@@ -194,3 +203,53 @@ module lzVNetConnection 'modules/hubVirtualNetworkConnections.bicep' = [for (reg
   }
 }]
 
+// On-Prem
+// Deploy "on-prem" resource groups
+resource onPremRG 'Microsoft.Resources/resourceGroups@2021-04-01' = [for (site, i) in vwanConfig.onPremSites: {
+  name: '${namePrefix}-site-${site.location}-rg'
+  location: site.location
+}]
+
+// Deploy "on-prem" VNets
+module onPremVnet 'modules/virtualNetworks.bicep' = [for (site, i) in vwanConfig.onPremSites: {
+  name: 'site-${site.location}-vnet-deploy'
+  scope: onPremRG[i]
+  params: {
+    addressPrefix: site.addressPrefix
+    vnetName: '${namePrefix}-site-${site.location}-vnet'
+  }
+}]
+
+//Deploy "on-prem" servers
+module onPremServer 'modules/windowsVM.bicep' = [for (site, i) in vwanConfig.onPremSites: if (site.deployVM) {
+  name: 'site-${site.location}-vm-deploy'
+  scope: onPremRG[i]
+  params: {
+    vmName: '${site.location}01'
+    adminPassword: vmAdminPassword
+    subnetId: onPremVnet[i].outputs.serverSubnetId
+  }
+}]
+
+// Deploy "on-prem" VPN Gateway
+module onPremVPNGw 'modules/virtualNetworkGateways.bicep' = [for (site, i) in vwanConfig.onPremSites: {
+  name: 'site-${site.location}-vpnGw-deploy'
+  scope: onPremRG[i]
+  params: {
+    vpnGwName: '${onPremVnet[i].outputs.vnetName}-vgw'
+    subnetId: onPremVnet[i].outputs.gwSubnetId
+  }
+}]
+
+// Deploy "on-Prem" site in VWAN
+module vpnSites 'modules/vpnSites.bicep' = [for (site, i) in vwanConfig.onPremSites: {
+  name: 'site-${site.location}-vpnSite-deploy'
+  scope: vwanRg
+  params: {
+    siteName: '${site.location}-vpnSite'
+    siteAddressPrefix: site.addressPrefix
+    bgpPeeringAddress: onPremVPNGw[i].outputs.bgpAddress
+    vpnDeviceIpAddress: onPremVPNGw[i].outputs.publicIp
+    wanId: vwan.outputs.resourceId
+  }
+}]

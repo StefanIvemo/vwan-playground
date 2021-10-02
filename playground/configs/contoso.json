@@ -4,10 +4,10 @@
         {
             "location": "westeurope",
             "hubAddressPrefix": "10.0.0.0/24",
-            "deployFw": true,
+            "deployFw": false,
             "deployVpnGw": true,
-            "deployErGw": true,
-            "deployP2SGw": true,
+            "deployErGw": false,
+            "deployP2SGw": false,
             "p2sConfig": {
                 "p2sAddressPrefixes": [
                     "10.0.4.0/22"
@@ -21,7 +21,7 @@
         {
             "location": "northeurope",
             "hubAddressPrefix": "10.10.0.0/24",
-            "deployFw": true,
+            "deployFw": false,
             "deployVpnGw": false,
             "deployErGw": false,
             "deployP2SGw": false,
@@ -34,7 +34,7 @@
             "location": "eastus",
             "hubAddressPrefix": "10.20.0.0/24",
             "deployFw": false,
-            "deployVpnGw": true,
+            "deployVpnGw": false,
             "deployErGw": false,
             "deployP2SGw": false,
             "landingZones": {
@@ -43,19 +43,15 @@
             }
         }
     ],
-    "onPremLocations": [
+    "onPremSites": [
         {
             "location": "westeurope",
-            "hubAddressPrefix": "172.16.0.0/22",
-            "deployFw": true,
-            "deployVpnGw": false,
+            "addressPrefix": "172.16.0.0/22",
             "deployVM": true
         },
         {
             "location": "eastus",
-            "hubAddressPrefix": "172.16.4.0/22",
-            "deployFw": true,
-            "deployVpnGw": false,
+            "addressPrefix": "172.16.4.0/22",
             "deployVM": true
         }
     ]
