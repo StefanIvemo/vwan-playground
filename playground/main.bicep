@@ -4,6 +4,9 @@ param location string = 'westeurope'
 @secure()
 param vmAdminPassword string
 
+@secure()
+param psk string
+
 // Load VWAN Playground Config file. 
 var vwanConfig = json(loadTextContent('./configs/contoso.json'))
 
@@ -253,3 +256,35 @@ module vpnSites 'modules/vpnSites.bicep' = [for (site, i) in vwanConfig.onPremSi
     wanId: vwan.outputs.resourceId
   }
 }]
+
+// Hubs with VPN Gw Enabled
+var hubs = [for region in vwanConfig.regions: {
+  name: '${vwanName}-${region.location}-vhub'
+  vpnEnabled: region.deployVpnGw
+}]
+
+module vpnConnection 'modules/vpnConnections.bicep' = [for (site, i) in vwanConfig.onPremSites: {
+  name: 'site-${site.location}-vpnConnection-deploy'
+  scope: vwanRg
+  params: {
+    hubs: hubs
+    vpnSiteId: vpnSites[i].outputs.resourceId
+    siteName:  vpnSites[i].outputs.resourceName
+    psk: psk
+  }
+}]
+
+
+// module hubtoonprems2s './VNetVPNSiteToSite.bicep' = {
+//   name: 'hubtoonprems2sdeploy'
+//   scope: resourceGroup(onpremrg.name)
+//   params:{
+//     localnetworkgwname: 'onprem-to-vhub-cn'
+//     location: location
+//     vpngwid: onpremvpngw.outputs.id
+//     gwipaddress: hubvpngw.outputs.gwpublicip
+//     bgppeeringpddress: hubvpngw.outputs.gwprivateip
+//     addressprefixes: onprems2saddressprefixes
+//     psk: psk
+//   }
+// }

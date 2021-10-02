@@ -38,3 +38,4 @@ resource vpnSite 'Microsoft.Network/vpnSites@2020-06-01' = {
 }
 
 output resourceId string = vpnSite.id
+output resourceName string = vpnSite.name
