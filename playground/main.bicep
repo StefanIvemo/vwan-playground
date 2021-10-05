@@ -263,6 +263,8 @@ var hubs = [for region in vwanConfig.regions: {
   vpnEnabled: region.deployVpnGw
 }]
 
+
+//Conflict...
 module vpnConnection 'modules/vpnConnections.bicep' = [for (site, i) in vwanConfig.onPremSites: {
   name: 'site-${site.location}-vpnConnection-deploy'
   scope: vwanRg
