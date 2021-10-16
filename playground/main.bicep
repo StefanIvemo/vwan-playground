@@ -1,6 +1,7 @@
 targetScope = 'subscription'
 
 param location string = 'westeurope'
+
 @secure()
 param vmAdminPassword string
 
@@ -117,7 +118,7 @@ module p2svpnGateways 'modules/p2svpnGateways.bicep' = [for (region, i) in vwanC
   ]
   params: {
     virtualHubId: virtualHubs[i].outputs.resourceId
-    vpnServerConfigurationId: vpnServerConfigurations.outputs.resourceId
+    vpnServerConfigurationId: (!empty(clientId) && !empty(tenantId)) ? '' : vpnServerConfigurations.outputs.resourceId
     p2sVpnGwName: '${virtualHubs[i].outputs.resourceName}-p2sgw'
     addressPrefixes: region.p2sConfig.p2sAddressPrefixes
   }
@@ -185,6 +186,7 @@ module builtInRouteTables 'modules/defaultRouteTable.bicep' = [for (region, i) i
 }]
 
 // Landing Zone VNet Connection. If the hub has a firewall apply landing zone route table otherwise use the default
+@batchSize(1)
 module lzVNetConnection 'modules/hubVirtualNetworkConnections.bicep' = [for (region, i) in vwanConfig.regions: {
   scope: vwanRg
   name: '${region.landingZones.name}-vnet-conn-deploy'
@@ -261,31 +263,40 @@ module vpnSites 'modules/vpnSites.bicep' = [for (site, i) in vwanConfig.onPremSi
 var hubs = [for region in vwanConfig.regions: {
   name: '${vwanName}-${region.location}-vhub'
   vpnEnabled: region.deployVpnGw
+  addressPrefix: region.hubAddressPrefix
 }]
 
+// Get all vHubs with S2S gateway enabled and create an array output
+module vpnGws 'modules/vpnGatewayInfo.bicep' = {
+  scope: vwanRg
+  name: 'getAllVPNGws'
+  params: {
+    hubs: hubs
+  }
+}
 
-//Conflict...
+// Create VPN Connections in VWAN for each "on-prem" site
+@batchSize(1)
 module vpnConnection 'modules/vpnConnections.bicep' = [for (site, i) in vwanConfig.onPremSites: {
   name: 'site-${site.location}-vpnConnection-deploy'
   scope: vwanRg
   params: {
-    hubs: hubs
+    hubs: vpnGws.outputs.hubs
     vpnSiteId: vpnSites[i].outputs.resourceId
     siteName: vpnSites[i].outputs.resourceName
     psk: psk
   }
 }]
 
-// module siteToSite 'modules/siteToSite.bicep' = [for (site, i) in vwanConfig.onPremSites: {
-//   name: 'site-${site.location}-s2s-deploy'
-//   scope: onPremRG[i]
-//   params: {
-//     connectionName: 'site-${site.location}-to-hub-con'
-//     vpnDeviceIpAddress:   
-//     bgpPeeringAddress: 
-//     psk: psk
-//     addressPrefixes: 
-//     vpnGwId: onPremVPNGw[i].outputs.resourceId
-//     lgwName: 
-//   }
-// }]
+
+
+// Create local network gateways and site to site connections for each hub in the "on-prem" sites
+module siteToSite 'modules/siteToSite.bicep' = [for (site, i) in vwanConfig.onPremSites: {
+    name: 'site-${site.location}-s2s-deploy'
+   scope: onPremRG[i]
+    params: {
+      site: site
+      hubs: vpnGws.outputs.hubs
+      psk: psk      
+    }
+  }]

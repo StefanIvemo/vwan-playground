@@ -13,7 +13,7 @@ resource vHub 'Microsoft.Network/virtualHubs@2021-02-01' existing = {
   name: hubName
 }
 
-resource connection 'Microsoft.Network/virtualHubs/hubVirtualNetworkConnections@2021-02-01' = {
+resource connection 'Microsoft.Network/virtualHubs/hubVirtualNetworkConnections@2021-03-01' = {
   name: connectionName
   parent: vHub
   properties: {

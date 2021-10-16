@@ -1,42 +1,38 @@
-param lgwName string
-param connectionName string
-param addressPrefixes array
-param bgpPeeringAddress string
-param vpnDeviceIpAddress string
-param vpnGwId string
+param site object
+param hubs array
 
 @secure()
 param psk string
 param location string = resourceGroup().location
 
-resource lgw 'Microsoft.Network/localNetworkGateways@2020-06-01' = {
-  name: lgwName
+resource lgw 'Microsoft.Network/localNetworkGateways@2020-06-01' = [for hub in hubs: if (hub.vpnGw != null) {
+  name: '${site.location}-${hub.name}'
   location: location
   properties: {
     localNetworkAddressSpace: {
-      addressPrefixes: addressPrefixes
+      addressPrefixes: hub.hubAddressPrefix
     }
-    gatewayIpAddress: vpnDeviceIpAddress
+    gatewayIpAddress: hub.vpnGw.vpnGwPublicIp
     bgpSettings: {
-      asn: 65515
-      bgpPeeringAddress: bgpPeeringAddress
+      asn: hub.vpnGw.vpnGwASN
+      bgpPeeringAddress: hub.vpnGw.vpnGwPrivateIp
     }
   }
-}
+}]
 
-resource s2sconnection 'Microsoft.Network/connections@2021-02-01' = {
-  name: connectionName
+resource s2sconnection 'Microsoft.Network/connections@2021-02-01' = [for (hub, i) in hubs: if (hub.vpnGw != null) {
+  name: '${site.location}-to-${hub.name}-con'
   location: location
   properties: {
     connectionType: 'IPsec'
     connectionProtocol: 'IKEv2'
     virtualNetworkGateway1: {
-      id: vpnGwId
+      id: hub.vpnGw.vpnGwResourceId
     }
     enableBgp: true
     sharedKey: psk
     localNetworkGateway2: {
-      id: lgw.id
+      id: lgw[i].id
     }
   }
-}
+}]
