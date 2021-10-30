@@ -1,7 +1,5 @@
 targetScope = 'subscription'
 
-param location string = 'westeurope'
-
 @secure()
 param vmAdminPassword string
 
@@ -10,6 +8,7 @@ param psk string
 
 // Load VWAN Playground Config file. 
 var vwanConfig = json(loadTextContent('./configs/contoso.json'))
+var location = vwanConfig.defaultLocation
 
 // Load P2S AAD Auth Config file
 var p2sAuthConfig = json(loadTextContent('./configs/p2sVpnAADAuth.json'))
@@ -20,13 +19,39 @@ var tenantId = p2sAuthConfig.tenantId
 var namePrefix = vwanConfig.namePrefix
 var vwanName = '${namePrefix}-vwan'
 
+// Shared Services
+// Resource Group for shared services
+resource sharedg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
+  name: '${namePrefix}-sharedservices-rg'
+  location: location
+}
+
+// Log Analytics Workspace
+module workspace 'modules/workspaces.bicep' = {
+  scope: sharedg
+  name: 'workspace-deploy'
+  params: {
+    location: location
+    namePrefix: namePrefix
+  }
+}
+
+// Private DNS Zone - Used by all VNets (LZ and "on-prem") for name resolution
+module privateDnsZone 'modules/privateDnsZones.bicep' = {
+  scope: sharedg
+  name: 'private-dns-deploy'
+  params: {
+    namePrefix: namePrefix
+  }
+}
+
+// VWAN
 // Resource Group
 resource vwanRg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: '${namePrefix}-vwan-rg'
   location: location
 }
 
-// VWAN
 // Deploy Virtual VWAN
 module vwan 'modules/virtualWans.bicep' = {
   scope: vwanRg
@@ -138,6 +163,8 @@ module landingZoneVnet 'modules/virtualNetworks.bicep' = [for (region, i) in vwa
   params: {
     addressPrefix: region.landingZones.addressPrefix
     vnetName: '${region.landingZones.name}-vnet'
+    privateDnsZoneName: privateDnsZone.outputs.resourceName
+    privateDnsZoneRg: sharedg.name
   }
 }]
 
@@ -198,11 +225,6 @@ module lzVNetConnection 'modules/hubVirtualNetworkConnections.bicep' = [for (reg
     ] : [
       builtInRouteTables[i].outputs.defaultRouteTableResourceId
     ]
-    propagatedRouteTableLabels: region.deployFw ? [
-      'none'
-    ] : [
-      'default'
-    ]
     vnetId: landingZoneVnet[i].outputs.resourceId
     connectionName: 'peeredTo-${region.landingZones.name}-vnet'
   }
@@ -222,6 +244,8 @@ module onPremVnet 'modules/virtualNetworks.bicep' = [for (site, i) in vwanConfig
   params: {
     addressPrefix: site.addressPrefix
     vnetName: '${namePrefix}-site-${site.location}-vnet'
+    privateDnsZoneName: privateDnsZone.outputs.resourceName
+    privateDnsZoneRg: sharedg.name
   }
 }]
 
@@ -269,6 +293,9 @@ var hubs = [for region in vwanConfig.regions: {
 // Get all vHubs with S2S gateway enabled and create an array output
 module vpnGws 'modules/vpnGatewayInfo.bicep' = {
   scope: vwanRg
+  dependsOn: [
+    vpnGateways
+  ]
   name: 'getAllVPNGws'
   params: {
     hubs: hubs
@@ -287,8 +314,6 @@ module vpnConnection 'modules/vpnConnections.bicep' = [for (site, i) in vwanConf
     psk: psk
   }
 }]
-
-
 
 // Create local network gateways and site to site connections for each hub in the "on-prem" sites
 module siteToSite 'modules/siteToSite.bicep' = [for (site, i) in vwanConfig.onPremSites: {
