@@ -33,9 +33,9 @@ resource connection 'Microsoft.Network/virtualHubs/hubVirtualNetworkConnections@
   }
 }
 
-// Hack to give the default route tables time to update
+// Hack to give the default route tables time to update. Creates 20 empty deployments.
 @batchSize(1)
-module wait 'wait.bicep' = [for i in range(1,30): {
+module wait 'wait.bicep' = [for i in range(1,20): {
   name: 'WaitingOnRoutes${i}'
   dependsOn: [
     connection
