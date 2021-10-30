@@ -49,7 +49,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2020-08-01' = {
 }
 
 module privateDnsZoneLink 'privateDnsZoneLink.bicep' = {
-  name: 'deploy-privatedns-vnetlink'
+  name: 'deploy-vnetlink${vnet.name}'
   scope: resourceGroup(privateDnsZoneRg)
   params: {
     privateDnsZoneName: privateDnsZoneName
