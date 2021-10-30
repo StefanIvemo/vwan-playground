@@ -1,5 +1,6 @@
 {
     "namePrefix": "contoso",
+    "defaultLocation": "westeurope",
     "regions": [
         {
             "location": "westeurope",
