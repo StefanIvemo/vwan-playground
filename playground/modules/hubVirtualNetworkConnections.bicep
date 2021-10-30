@@ -3,7 +3,6 @@ param connectionName string
 param vnetId string
 param associatedRouteTableId string
 param propagatedRouteTableIds array = []
-param propagatedRouteTableLabels array = []
 
 var routeTableIds = [for id in propagatedRouteTableIds:{
 id: id
@@ -28,7 +27,6 @@ resource connection 'Microsoft.Network/virtualHubs/hubVirtualNetworkConnections@
         id: associatedRouteTableId
       }
       propagatedRouteTables: {
-        labels: propagatedRouteTableLabels
         ids: propagatedRouteTableIds == [] ? json('null') : routeTableIds
       }
     }
