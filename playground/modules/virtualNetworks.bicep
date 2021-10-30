@@ -1,6 +1,8 @@
 param vnetName string
 param addressPrefix string
 param dnsServers array = []
+param privateDnsZoneRg string
+param privateDnsZoneName string
 param tags object = {}
 param location string = resourceGroup().location
 
@@ -43,6 +45,16 @@ resource vnet 'Microsoft.Network/virtualNetworks@2020-08-01' = {
         }
       }
     ]
+  }
+}
+
+module privateDnsZoneLink 'privateDnsZoneLink.bicep' = {
+  name: 'deploy-privatedns-vnetlink'
+  scope: resourceGroup(privateDnsZoneRg)
+  params: {
+    privateDnsZoneName: privateDnsZoneName
+    vNetId: vnet.id
+    vNetName: vnet.name
   }
 }
 
