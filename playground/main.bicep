@@ -322,6 +322,7 @@ module siteToSite 'modules/siteToSite.bicep' = [for (site, i) in vwanConfig.onPr
     params: {
       site: site
       hubs: vpnGws.outputs.hubs
+      vpnGwId: onPremVPNGw[i].outputs.resourceId
       psk: psk      
     }
   }]
