@@ -9,6 +9,7 @@ output hubs array = [for (hub, i) in hubs: {
   hubAddressPrefix: [
     hub.addressPrefix
   ]
+  vpnEnabled: hub.vpnEnabled ? true : false
   vpnGw: !hub.vpnEnabled ? null : {
     vpnGwName: vpnGw[i].name
     vpnGwResourceId: vpnGw[i].id
