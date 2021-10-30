@@ -34,3 +34,12 @@ resource connection 'Microsoft.Network/virtualHubs/hubVirtualNetworkConnections@
     }
   }
 }
+
+// Hack to give the default route tables time to update
+@batchSize(1)
+module wait 'wait.bicep' = [for i in range(1,30): {
+  name: 'WaitingOnRoutes${i}'
+  dependsOn: [
+    connection
+  ]
+}]
