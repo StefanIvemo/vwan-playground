@@ -8,7 +8,7 @@ var routeTableIds = [for id in propagatedRouteTableIds:{
 id: id
 }]
 
-resource vHub 'Microsoft.Network/virtualHubs@2021-02-01' existing = {
+resource vHub 'Microsoft.Network/virtualHubs@2021-03-01' existing = {
   name: hubName
 }
 
@@ -35,7 +35,7 @@ resource connection 'Microsoft.Network/virtualHubs/hubVirtualNetworkConnections@
 
 // Hack to give the default route tables time to update. Creates 20 empty deployments.
 @batchSize(1)
-module wait 'wait.bicep' = [for i in range(1,20): {
+module wait 'wait.bicep' = [for i in range(1,30): {
   name: 'WaitingOnRoutes${i}'
   dependsOn: [
     connection
