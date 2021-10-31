@@ -1,6 +1,9 @@
 {
     "namePrefix": "contoso",
     "defaultLocation": "westeurope",
+    "sharedServices": {
+        "addressPrefix": "192.168.0.0/24"
+    },
     "regions": [
         {
             "location": "westeurope",
