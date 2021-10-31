@@ -45,6 +45,20 @@ module privateDnsZone 'modules/privateDnsZones.bicep' = {
   }
 }
 
+// VNet for shared bastion host
+module bastionVnet 'modules/virtualNetworks.bicep' = {
+  scope: sharedg
+  name: 'bastion-vnet-deploy'
+  params: {
+    addressPrefix: vwanConfig.sharedServices.addressPrefix
+    privateDnsZoneName: privateDnsZone.outputs.resourceName
+    privateDnsZoneRg: sharedg.name
+    vnetName: '${namePrefix}-sharedservices-${vwanConfig.defaultLocation}-vnet'
+    deployBastionSubnet: true
+    deployGatewaySubnet: false
+  }
+}
+
 // VWAN
 // Resource Group
 resource vwanRg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
