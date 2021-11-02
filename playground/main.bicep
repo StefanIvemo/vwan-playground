@@ -59,6 +59,16 @@ module bastionVnet 'modules/virtualNetworks.bicep' = {
   }
 }
 
+// Azure Bastion Host
+module bastion 'modules/bastionHosts.bicep' = {
+  scope: sharedg
+  name: 'bastion-deploy'
+  params: {
+    name: '${namePrefix}-shared-bastion'
+    subnetId: bastionVnet.outputs.bastionSubnetId
+  }
+}
+
 // VWAN
 // Resource Group
 resource vwanRg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
@@ -331,12 +341,12 @@ module vpnConnection 'modules/vpnConnections.bicep' = [for (site, i) in vwanConf
 
 // Create local network gateways and site to site connections for each hub in the "on-prem" sites
 module siteToSite 'modules/siteToSite.bicep' = [for (site, i) in vwanConfig.onPremSites: {
-    name: 'site-${site.location}-s2s-deploy'
-   scope: onPremRG[i]
-    params: {
-      site: site
-      hubs: vpnGws.outputs.hubs
-      vpnGwId: onPremVPNGw[i].outputs.resourceId
-      psk: psk      
-    }
-  }]
+  name: 'site-${site.location}-s2s-deploy'
+  scope: onPremRG[i]
+  params: {
+    site: site
+    hubs: vpnGws.outputs.hubs
+    vpnGwId: onPremVPNGw[i].outputs.resourceId
+    psk: psk
+  }
+}]

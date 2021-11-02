@@ -61,7 +61,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2020-08-01' = {
     dhcpOptions: {
       dnsServers: dnsServers
     }
-    subnets: deployBastionSubnet && deployGatewaySubnet ? union(standardSubnet, gatewaySubnet, bastionSubnet) : deployBastionSubnet && !deployGatewaySubnet ? union(standardSubnet, bastionSubnet) : deployGatewaySubnet && !deployBastionSubnet ? union(standardSubnet, gatewaySubnet) : standardSubnet
+    subnets: deployBastionSubnet && !deployGatewaySubnet ? union(standardSubnet, bastionSubnet) : deployGatewaySubnet && !deployBastionSubnet ? union(standardSubnet, gatewaySubnet) : standardSubnet
   }
 }
 
@@ -78,4 +78,5 @@ module privateDnsZoneLink 'privateDnsZoneLink.bicep' = {
 output vnetName string = vnet.name
 output serverSubnetId string = vnet.properties.subnets[0].id
 output gwSubnetId string = vnet.properties.subnets[1].id
+output bastionSubnetId string = vnet.properties.subnets[1].id
 output resourceId string = vnet.id
