@@ -1,4 +1,4 @@
-# Log Analytics Workbooks
+# Log Analytics/Azure Monitor Workbooks
 
 The Log Analytics Workbooks included in this repo comes from the [Azure-Network-Security](https://github.com/Azure/Azure-Network-Security) repo. Check the repo for updated versions.
 
