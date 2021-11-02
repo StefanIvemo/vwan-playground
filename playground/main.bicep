@@ -165,6 +165,7 @@ module p2svpnGateways 'modules/p2svpnGateways.bicep' = [for (region, i) in vwanC
   name: 'p2svpnGateway-${region.location}-deploy'
   dependsOn: [
     erGateways
+    vpnGateways
   ]
   params: {
     virtualHubId: virtualHubs[i].outputs.resourceId
