@@ -70,6 +70,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2020-08-01' = {
 // Create peering to bastion vnet
 resource peering 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2021-03-01' = if (peerName != '' && peerId !='') {
   name: 'peeredTo-${peerName}'
+  parent: vnet
   properties: {
     allowForwardedTraffic: true
     allowVirtualNetworkAccess: true
@@ -81,7 +82,7 @@ resource peering 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2021-
 
 // Create a peering to this vnet in bastion vnet
 module remotePeering 'virtualNetworkPeerings.bicep' = if (peerName != '' && peerId !='') {
-  name: 'add-remote-peering'
+  name: 'peeredTo-${vnet.name}'
   scope: resourceGroup(sharedServicesRg)
   params: {
     peerId: vnet.id
