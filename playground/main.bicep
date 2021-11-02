@@ -182,6 +182,7 @@ resource landingZoneRg 'Microsoft.Resources/resourceGroups@2021-04-01' = [for (r
 }]
 
 // Deploy "landing zone" VNets
+@batchSize(1)
 module landingZoneVnet 'modules/virtualNetworks.bicep' = [for (region, i) in vwanConfig.regions: {
   name: '${region.landingZones.name}-vnet-deploy'
   scope: landingZoneRg[i]
@@ -265,6 +266,7 @@ resource onPremRG 'Microsoft.Resources/resourceGroups@2021-04-01' = [for (site, 
 }]
 
 // Deploy "on-prem" VNets
+@batchSize(1)
 module onPremVnet 'modules/virtualNetworks.bicep' = [for (site, i) in vwanConfig.onPremSites: {
   name: 'site-${site.location}-vnet-deploy'
   scope: onPremRG[i]
