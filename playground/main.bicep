@@ -52,7 +52,7 @@ module bastionVnet 'modules/virtualNetworks.bicep' = {
   params: {
     addressPrefix: vwanConfig.sharedServices.addressPrefix
     privateDnsZoneName: privateDnsZone.outputs.resourceName
-    privateDnsZoneRg: sharedg.name
+    sharedServicesRg: sharedg.name
     vnetName: '${namePrefix}-sharedservices-${vwanConfig.defaultLocation}-vnet'
     deployBastionSubnet: true
     deployGatewaySubnet: false
@@ -188,7 +188,9 @@ module landingZoneVnet 'modules/virtualNetworks.bicep' = [for (region, i) in vwa
     addressPrefix: region.landingZones.addressPrefix
     vnetName: '${region.landingZones.name}-vnet'
     privateDnsZoneName: privateDnsZone.outputs.resourceName
-    privateDnsZoneRg: sharedg.name
+    sharedServicesRg: sharedg.name
+    peerId: bastionVnet.outputs.resourceId
+    peerName: bastionVnet.outputs.vnetName
   }
 }]
 
@@ -269,7 +271,9 @@ module onPremVnet 'modules/virtualNetworks.bicep' = [for (site, i) in vwanConfig
     addressPrefix: site.addressPrefix
     vnetName: '${namePrefix}-site-${site.location}-vnet'
     privateDnsZoneName: privateDnsZone.outputs.resourceName
-    privateDnsZoneRg: sharedg.name
+    sharedServicesRg: sharedg.name
+    peerId: bastionVnet.outputs.resourceId
+    peerName: bastionVnet.outputs.vnetName
   }
 }]
 
