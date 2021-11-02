@@ -22,6 +22,8 @@ New-AzSubscriptionDeployment -Name vwan-playground -Location westeurope -Templat
 az deployment sub create --name vwan-playground --location westeurope --template-file .\playground\main.bicep
 ```
 
+> NOTE: The deployment is complex and consist of multiple resources that takes a long time to provision. Expected deployment time is over 1 hour.
+
 ## Topology **Needs an update**
 
 The Azure Virtual WAN Playground deploys the following topology:
