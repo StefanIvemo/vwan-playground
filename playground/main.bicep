@@ -119,6 +119,7 @@ module azureFirewalls 'modules/azureFirewalls.bicep' = [for (region, i) in vwanC
     location: region.location
     fwPolicyId: region.deployFw ? firewallPolicies[i].outputs.childResourceId : ''
     publicIPsCount: 1
+    workspaceId: workspace.outputs.resourceId
   }
 }]
 
