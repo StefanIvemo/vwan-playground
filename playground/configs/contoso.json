@@ -8,10 +8,10 @@
         {
             "location": "westeurope",
             "hubAddressPrefix": "10.0.0.0/24",
-            "deployFw": false,
+            "deployFw": true,
             "deployVpnGw": true,
-            "deployErGw": false,
-            "deployP2SGw": false,
+            "deployErGw": true,
+            "deployP2SGw": true,
             "p2sConfig": {
                 "p2sAddressPrefixes": [
                     "10.0.4.0/22"
@@ -28,7 +28,7 @@
             "deployFw": false,
             "deployVpnGw": false,
             "deployErGw": false,
-            "deployP2SGw": false,
+            "deployP2SGw": true,
             "landingZones": {
                 "name": "neu-lz1",
                 "addressPrefix": "10.10.10.0/24"
@@ -37,7 +37,7 @@
         {
             "location": "eastus",
             "hubAddressPrefix": "10.20.0.0/24",
-            "deployFw": false,
+            "deployFw": true,
             "deployVpnGw": false,
             "deployErGw": false,
             "deployP2SGw": false,
