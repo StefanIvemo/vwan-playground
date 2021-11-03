@@ -169,7 +169,7 @@ module p2svpnGateways 'modules/p2svpnGateways.bicep' = [for (region, i) in vwanC
   ]
   params: {
     virtualHubId: virtualHubs[i].outputs.resourceId
-    vpnServerConfigurationId: (!empty(clientId) && !empty(tenantId)) ? '' : vpnServerConfigurations.outputs.resourceId
+    vpnServerConfigurationId: (!empty(clientId) && !empty(tenantId)) ? vpnServerConfigurations.outputs.resourceId :''
     p2sVpnGwName: '${virtualHubs[i].outputs.resourceName}-p2sgw'
     addressPrefixes: region.p2sConfig.p2sAddressPrefixes
   }
