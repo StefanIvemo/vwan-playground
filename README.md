@@ -14,7 +14,29 @@ The Azure Virtual WAN Playground is built using [💪Bicep](https://github.com/A
 
 The template is built using the target scope `subscription`. Create a new subscription deployment using your favorite Azure command line tool and sit back and relax.
 
-> Before you deploy the template, make sure that you add values to the `p2sVpnAADAuth.json` for a successful Point-to-Site VPN deployment.
+### Pre-reqs
+
+#### Config
+
+Before you deploy the template, make sure that you add values to the `p2sVpnAADAuth.json` for a successful Point-to-Site VPN deployment. More info about the config files can be found [here](./playground/configs/README.md).
+
+#### Bicep
+
+The Playground is built and tested using [Bicep v0.4.1008](https://github.com/Azure/bicep/releases/tag/v0.4.1008), make sure that you have this or a newer version installed before starting the deployment (or build the Bicep file).
+
+Check installed Bicep version using Azure CLI (will be used by Azure PowerShell module):
+```azurecli
+bicep --version
+```
+
+Check installed version of Bicep CLI used by Azure CLI:
+```azurecli
+az bicep version
+```
+
+### Create the deployment
+
+Create the deployment using your preferred command line tool.
 
 ```powershell
 New-AzSubscriptionDeployment -Name vwan-playground -Location westeurope -TemplateFile .\playground\main.bicep
