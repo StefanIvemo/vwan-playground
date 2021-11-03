@@ -10,7 +10,7 @@
             "hubAddressPrefix": "10.0.0.0/24",
             "deployFw": true,
             "deployVpnGw": true,
-            "deployErGw": true,
+            "deployErGw": false,
             "deployP2SGw": true,
             "p2sConfig": {
                 "p2sAddressPrefixes": [
@@ -44,7 +44,7 @@
             "hubAddressPrefix": "10.20.0.0/24",
             "deployFw": true,
             "deployVpnGw": false,
-            "deployErGw": false,
+            "deployErGw": true,
             "deployP2SGw": false,
             "landingZones": {
                 "name": "eus-lz1",
