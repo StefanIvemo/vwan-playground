@@ -24,7 +24,7 @@ Before you deploy the template, make sure that you add values to the `p2sVpnAADA
 
 The Playground is built and tested using [Bicep v0.4.1008](https://github.com/Azure/bicep/releases/tag/v0.4.1008), make sure that you have this or a newer version installed before starting the deployment (or build the Bicep file).
 
-Check installed Bicep version using Azure CLI (will be used by Azure PowerShell module):
+Check installed Bicep version using Bicep CLI (will be used by Azure PowerShell module):
 ```azurecli
 bicep --version
 ```
