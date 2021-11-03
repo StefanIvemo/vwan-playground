@@ -1,8 +1,8 @@
 # Azure Virtual WAN Playground
 
-Welcome to the Azure Virtual WAN Playground repository! Your one-stop shop for an awesome Azure Virtual WAN lab environment.
+> **[2021-11-03]** Virtual WAN Playground was built using early versions of Bicep. I've started building a new improved version using new Bicep features where I will also provide three separate sample environments based on different config files. The updated version is nearly finished, please try it out and provide feedback, it can be found in the  [vwan-playground-v2](https://github.com/StefanIvemo/vwan-playground/tree/vwan-playground-v2) branch. Enjoy!
 
-> **[2021-07-31]** Virtual WAN Playground was built using early versions of Bicep. I've started building a new improved version using new Bicep features where I will also provide three separate sample environments based on different config files. Although it's work in progress the code can be found in the [vwan-playground-v2](https://github.com/StefanIvemo/vwan-playground/tree/vwan-playground-v2) branch. Enjoy!
+Welcome to the Azure Virtual WAN Playground repository! Your one-stop shop for an awesome Azure Virtual WAN lab environment.
 
 ## What is Azure Virtual WAN Playground?
 
