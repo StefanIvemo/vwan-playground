@@ -28,12 +28,7 @@
             "deployFw": false,
             "deployVpnGw": false,
             "deployErGw": false,
-            "deployP2SGw": true,
-            "p2sConfig": {
-                "p2sAddressPrefixes": [
-                    "10.10.4.0/22"
-                ]
-            },
+            "deployP2SGw": false,
             "landingZones": {
                 "name": "neu-lz1",
                 "addressPrefix": "10.10.10.0/24"
