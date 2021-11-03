@@ -62,8 +62,6 @@ resource firewalldiag 'Microsoft.Network/azureFirewalls/providers/diagnosticSett
   }
 }
 
-
-
 output fwName string = firewall.name
 output resourceId string = firewall.id
 output fwPrivateIp string = firewall.properties.hubIPAddresses.privateIPAddress
