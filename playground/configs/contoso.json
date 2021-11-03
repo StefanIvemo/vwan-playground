@@ -31,7 +31,7 @@
             "deployP2SGw": true,
             "p2sConfig": {
                 "p2sAddressPrefixes": [
-                    "10.0.4.0/22"
+                    "10.10.4.0/22"
                 ]
             },
             "landingZones": {
