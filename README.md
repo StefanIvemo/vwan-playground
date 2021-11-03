@@ -24,32 +24,11 @@ az deployment sub create --name vwan-playground --location westeurope --template
 
 > NOTE: The deployment is complex and consist of multiple resources that takes a long time to provision. Expected deployment time is over 1 hour.
 
-## Topology **Needs an update**
+## Topology <<**Needs an update**>>
 
 The Azure Virtual WAN Playground deploys the following topology:
 
-- Azure Virtual WAN
-  - Virtual Hub (Secured Virtual Hub)
-  - Firewall Policy
-    - Rule Collection Groups
-  - Azure Firewall
-  - Hub Route Tables
-  - Virtual Network Connection (Spoke VNet)
-    - Using custom route table sending branch and internet traffic to firewall
-  - VPN Gateway
-  - VPN Site (On-Prem VNet)
-- Spoke VNet
-  - Azure Bastion Service
-  - Virtual Machine
-- On-Prem VNet
-  - Azure Bastion Service
-  - Virtual Machine
-  - VPN Gateway
-    - Connection (On-Prem to WAN Hub)
-      - Local Network Gateway
-- Log Analytics Workspace (Firewall Diagnostics)  
- 
-<img src="https://github.com/StefanIvemo/vwan-playground/blob/main/media/vwan-playground-topology_v2.png?raw=true">
+
 
 ## Contributing
 
