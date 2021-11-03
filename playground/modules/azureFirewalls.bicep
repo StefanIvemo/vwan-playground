@@ -35,7 +35,7 @@ resource firewall 'Microsoft.Network/azureFirewalls@2021-02-01' = {
 }
 
 resource firewalldiag 'Microsoft.Network/azureFirewalls/providers/diagnosticSettings@2017-05-01-preview' = {
-  name: '${name}/Microsoft.Insights/diagnostics'
+  name: '${firewall.name}/Microsoft.Insights/diagnostics'
   location: location
   properties: {
     workspaceId: workspaceId
