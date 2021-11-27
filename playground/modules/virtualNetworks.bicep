@@ -15,9 +15,19 @@ var serverPrefix = '${split(addressPrefix, '.')[0]}.${split(addressPrefix, '.')[
 var gatewayPrefix = '${split(addressPrefix, '.')[0]}.${split(addressPrefix, '.')[1]}.${split(addressPrefix, '.')[2]}.64/26'
 var bastionPrefix = '${split(addressPrefix, '.')[0]}.${split(addressPrefix, '.')[1]}.${split(addressPrefix, '.')[2]}.128/26'
 
+var bastionNSGRules = json(loadTextContent('./nsgRules/azureBastionNSGRules.json'))
+
 resource nsg 'Microsoft.Network/networkSecurityGroups@2021-02-01' = {
   name: '${vnetName}-snet-servers-nsg'
   location: location
+}
+
+resource bastionNsg 'Microsoft.Network/networkSecurityGroups@2021-02-01' = if (deployBastionSubnet) {
+  name: '${vnetName}-snet-azurebastionsubnet-nsg'
+  location: location
+  properties: {
+    securityRules: bastionNSGRules
+  }
 }
 
 var standardSubnet = [
@@ -46,6 +56,9 @@ var bastionSubnet = [
     name: 'AzureBastionSubnet'
     properties: {
       addressPrefix: bastionPrefix
+      networkSecurityGroup: {
+        id: deployBastionSubnet ? bastionNsg.id : ''
+      }
     }
   }
 ]
@@ -68,7 +81,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2020-08-01' = {
 }
 
 // Create peering to bastion vnet
-resource peering 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2021-03-01' = if (peerName != '' && peerId !='') {
+resource peering 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2021-03-01' = if (peerName != '' && peerId != '') {
   name: 'peeredTo-${peerName}'
   parent: vnet
   properties: {
@@ -81,7 +94,7 @@ resource peering 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2021-
 }
 
 // Create a peering to this vnet in bastion vnet
-module remotePeering 'virtualNetworkPeerings.bicep' = if (peerName != '' && peerId !='') {
+module remotePeering 'virtualNetworkPeerings.bicep' = if (peerName != '' && peerId != '') {
   name: 'peeredTo-${vnet.name}'
   scope: resourceGroup(sharedServicesRg)
   params: {
@@ -90,7 +103,6 @@ module remotePeering 'virtualNetworkPeerings.bicep' = if (peerName != '' && peer
     vNetName: peerName
   }
 }
-
 
 module privateDnsZoneLink 'privateDnsZoneLink.bicep' = {
   name: 'deploy-vnetlink${vnet.name}'
