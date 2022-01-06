@@ -307,7 +307,7 @@ module vpnSites 'modules/vpnSites.bicep' = [for (site, i) in vwanConfig.onPremSi
   name: 'site-${site.location}-vpnSite-deploy'
   scope: vwanRg
   params: {
-    siteName: '${site.location}-vpnSite'
+    siteName: '${site.location}-vpnsite'
     siteAddressPrefix: site.addressPrefix
     bgpPeeringAddress: onPremVPNGw[i].outputs.bgpAddress
     vpnDeviceIpAddress: onPremVPNGw[i].outputs.publicIp
