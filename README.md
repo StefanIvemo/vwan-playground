@@ -39,7 +39,12 @@ az bicep version
 Create the deployment using your preferred command line tool.
 
 ```powershell
-New-AzSubscriptionDeployment -Name vwan-playground -Location westeurope -TemplateFile .\playground\main.bicep
+$params=@{
+    Name = 'vwan-playground'
+    Location = 'westeurope '
+    TemplateFile = '.\playground\main.bicep'
+}
+New-AzSubscriptionDeployment @params
 ```
 
 ```azurecli
