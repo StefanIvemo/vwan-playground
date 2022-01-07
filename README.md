@@ -12,13 +12,13 @@ The Azure Virtual WAN Playground is built using [💪Bicep](https://github.com/A
 
 ## Deployment
 
-The template is built using the target scope `subscription`. Create a new subscription deployment using your favorite Azure command line tool and sit back and relax.
+The template is built using the target scope `subscription`. To deploy the playground create a new subscription deployment using your favorite Azure command line tool and sit back and relax.
 
 ### Pre-reqs
 
 Before you deploy the VWAN Playground there are some prerequisites that you need to look into.
 
-#### Config files
+#### Config file
 
 The template is dynamic and will deploy different environments depending on which config file is being used for your deployment. Available configs are:
 
@@ -26,7 +26,7 @@ The template is dynamic and will deploy different environments depending on whic
 |:--|:--|:--|
 | Contoso | `contoso.json` | Multiple Virtual WAN hubs in different regions, landing zones and "on-premises" VNets. P2S VPN, S2S VPN, Azure Firewall. |
 
-> Additional configs are in the works.
+> Additional configs are in the works. Planning to add some configs with single regions VWAN hubs.
 
 Decide which config you want to use and update the `main.bicep` template to use the config file.
 
@@ -57,6 +57,10 @@ az bicep version
 
 Create the deployment using your preferred command line tool.
 
+> NOTE: The deployment is complex and consist of multiple resources that takes a long time to provision. Expected deployment time is over 1 hour.
+
+#### PowerShell
+
 ```powershell
 $params=@{
     Name = 'vwan-playground'
@@ -66,11 +70,11 @@ $params=@{
 New-AzSubscriptionDeployment @params
 ```
 
+#### Azure CLI
+
 ```azurecli
 az deployment sub create --name vwan-playground --location westeurope --template-file .\playground\main.bicep
 ```
-
-> NOTE: The deployment is complex and consist of multiple resources that takes a long time to provision. Expected deployment time is over 1 hour.
 
 ## Topologies
 
