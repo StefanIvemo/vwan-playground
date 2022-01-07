@@ -37,11 +37,11 @@ var vwanConfig = json(loadTextContent('./configs/contoso.json'))
 
 #### P2S Config
 
-Before you deploy the template, make sure that you add values to the `p2sVpnAADAuth.json` for a successful Point-to-Site VPN deployment. More info about the config files can be found [here](./playground/configs/README.md).
+Before you deploy the template, make sure that you add values to the `p2sVpnAADAuth.json` for a successful Point-to-Site VPN deployment. The application ID for the Azure VPN Enterprise Application and your Tenant ID is needed to configure VPN Auth. More info about the config files can be found [here](./playground/configs/README.md).
 
 #### Bicep
 
-The Playground is built and tested using [Bicep v0.4.1008](https://github.com/Azure/bicep/releases/tag/v0.4.1008), make sure that you have this or a newer version installed before starting the deployment (or build the Bicep file to an ARM template).
+The Playground is built and tested using [Bicep v0.4.1124](https://github.com/Azure/bicep/releases/tag/v0.4.1124), make sure that you have this or a newer version installed before starting the deployment (or build the Bicep file to an ARM template).
 
 Check installed Bicep version using Bicep CLI (will be used by Azure PowerShell module):
 ```azurecli
