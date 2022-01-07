@@ -115,7 +115,7 @@
     {
         "name": "AllowGetSessionInformation",
         "properties": {
-            "protocol": "*'",
+            "protocol": "*",
             "sourcePortRange": "*",
             "sourceAddressPrefix": "*",
             "destinationAddressPrefix": "Internet",
