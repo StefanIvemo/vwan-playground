@@ -4,9 +4,11 @@ The VWAN Playground template requires a config to deploy successfully. In the co
 
 ## Org configs
 
-| Organization | Config file | Description
-| --- | --- | --- |
-| Contoso | contoso.json | Organization with presence in multiple Azure regions and some "on-prem" sites.
+| Organization | Config file | Description |
+|:--|:--|:--|
+| Contoso | `contoso.json` | Multiple Virtual WAN hubs in different regions, landing zones and "on-premises" VNets. P2S VPN, S2S VPN, Azure Firewall. |
+| Fabrikam | `fabrikam.json` | Single Virtual WAN hub, landing zone and "on-premises" VNet. P2S VPN, S2S VPN, Azure Firewall. |
+| Wingtip | `wingtip.json` | Single Virtual WAN hub, landing zone. P2S VPN, Azure Firewall. |
 
 You can modify the config file anyway you want by changing the booleans and add/remove regions, landing zones and on-prem sites. Just make sure that you don't have any overlapping address spaces.
 
