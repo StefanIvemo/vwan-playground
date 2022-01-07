@@ -1,17 +1,9 @@
-@description('Specifies the Azure location where the resource should be created.')
 param location string = resourceGroup().location
+param vpnGwName string
+param subnetId string
 
-@description('Specifies the name to use for the VM resource.')
-param vpngwpipname string
-
-@description('Specifies the name to use for the VM resource.')
-param vpngwname string
-
-@description('Specifies the resource id of the subnet to connect the VM to.')
-param subnetref string
-
-resource vpngwpip 'Microsoft.Network/publicIPAddresses@2020-06-01' = {
-  name: vpngwpipname
+resource publicIp 'Microsoft.Network/publicIPAddresses@2020-06-01' = {
+  name: '${vpnGwName}-pip'
   location: location
   sku: {
     name: 'Standard'
@@ -21,8 +13,8 @@ resource vpngwpip 'Microsoft.Network/publicIPAddresses@2020-06-01' = {
   }
 }
 
-resource vpngw 'Microsoft.Network/virtualNetworkGateways@2020-06-01' = {
-  name: vpngwname
+resource vpnGw 'Microsoft.Network/virtualNetworkGateways@2020-06-01' = {
+  name: vpnGwName
   location: location    
   properties: {
       gatewayType: 'Vpn'
@@ -32,10 +24,10 @@ resource vpngw 'Microsoft.Network/virtualNetworkGateways@2020-06-01' = {
               properties: {
                   privateIPAllocationMethod: 'Dynamic'
                   subnet: {
-                      id: subnetref
+                      id: subnetId
                   }
                   publicIPAddress: {
-                      id: vpngwpip.id
+                      id: publicIp.id
                   }
               }
           }
@@ -54,6 +46,6 @@ resource vpngw 'Microsoft.Network/virtualNetworkGateways@2020-06-01' = {
   }
 }
 
-output id string = vpngw.id
-output ip string = vpngwpip.properties.ipAddress
-output bgpaddress string = vpngw.properties.bgpSettings.bgpPeeringAddress
+output resourceId string = vpnGw.id
+output publicIp string = publicIp.properties.ipAddress
+output bgpAddress string = vpnGw.properties.bgpSettings.bgpPeeringAddress

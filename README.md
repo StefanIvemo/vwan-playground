@@ -6,68 +6,100 @@ Welcome to the Azure Virtual WAN Playground repository! Your one-stop shop for a
 
 ## What is Azure Virtual WAN Playground?
 
-This repo is dedicated for all poor souls out there who want to play around with Azure Virtual WAN but don't have unlimited Azure Credit in their subscriptions. I've put together a template that deploys Azure Virtual WAN and all resources needed to play around with the service and test everything from VPN, Routing, Secured Virtual Hub, Virtual Network connections and more. The goal is to make it easy to spin up an environment when you need to test a feature for a short period of time and then remove it all when finished.
+This repo is dedicated for all poor souls out there who wants to play around with Azure Virtual WAN but don't have unlimited Azure Credit in their subscriptions (most of us 😊). I've put together a template that deploys Azure Virtual WAN and all resources needed to play around with the service and test everything from Site-to-Site VPN, Point-to-Site VPN, Routing, Secured Virtual Hub (Azure Firewall), Virtual Network connections and more. The goal is to make it easy and fast to spin up an environment when you need to test a feature for a short period of time and then remove it all when finished.
 
 ## How it's built
 
-The Azure Virtual WAN Playground is built using 💪Bicep language which makes it so much easier to work with and read compared to ARM Templates. Azure Virtual WAN with all it's dependencies between the hub and the connected services like VPN Gateway, Firewall (Secured Virtual WAN), VPN Site makes it hard to follow in pure ARM template. If you haven't tested Bicep yet check out the [Bicep repository](https://github.com/Azure/bicep) for all info needed, I guarantee you're going to love it!
+The Azure Virtual WAN Playground is built using [💪Bicep](https://github.com/Azure/bicep). It consists of multiple module templates, some [config files](./playground/configs/README.md) and a main template that puts everything together.
 
 ## Deployment
 
-The template is built using Bicep modules and the target scope is `subscription`. Deploy the solution using the compiled `main.json` template and optionally the `main.parameters.json` parameter file that can be found in the [playground](https://github.com/StefanIvemo/vwan-playground/tree/main/playground) folder.
+The template is built using the target scope `subscription`. Create a new subscription deployment using your favorite Azure command line tool and sit back and relax.
 
-### Azure PowerShell
+### Pre-reqs
 
+Before you deploy the VWAN Playground there are some prerequisites that you need to look into.
+
+#### Config files
+
+The template is dynamic and will deploy different environments depending on which config file is being used for your deployment. Available configs are:
+
+| Organization | Config file | Description |
+|:--|:--|:--|
+| Contoso | `contoso.json` | Multiple Virtual WAN hubs in different regions, landing zones and "on-premises" VNets. P2S VPN, S2S VPN, Azure Firewall. |
+
+> Additional configs are in the works.
+
+Decide which config you want to use and update the `main.bicep` template to use the config file.
+
+```bicep
+// Load VWAN Playground Config file. 
+var vwanConfig = json(loadTextContent('./configs/contoso.json'))
 ```
-New-AzDeployment -Name vwanplayground -Location <location> -TemplateFile .\main.json -TemplateParameterFile .\main.parameters.json
+
+#### P2S Config
+
+Before you deploy the template, make sure that you add values to the `p2sVpnAADAuth.json` for a successful Point-to-Site VPN deployment. The application ID for the Azure VPN Enterprise Application and your Tenant ID is needed to configure VPN Auth. More info about the config files can be found [here](./playground/configs/README.md).
+
+#### Bicep
+
+The Playground is built and tested using [Bicep v0.4.1124](https://github.com/Azure/bicep/releases/tag/v0.4.1124), make sure that you have this or a newer version installed before starting the deployment (or build the Bicep file to an ARM template).
+
+Check installed Bicep version using Bicep CLI (will be used by Azure PowerShell module):
+```azurecli
+bicep --version
 ```
 
-### Azure CLI
-
+Check installed version of Bicep CLI used by Azure CLI:
+```azurecli
+az bicep version
 ```
-az deployment sub create -n vwanplayground --location <location> --template-file main.json -parameters @main.parameters.json
+
+### Create the deployment
+
+Create the deployment using your preferred command line tool.
+
+```powershell
+$params=@{
+    Name = 'vwan-playground'
+    Location = 'westeurope '
+    TemplateFile = '.\playground\main.bicep'
+}
+New-AzSubscriptionDeployment @params
 ```
 
-## Topology
+```azurecli
+az deployment sub create --name vwan-playground --location westeurope --template-file .\playground\main.bicep
+```
 
-The Azure Virtual WAN Playground deploys the following topology:
+> NOTE: The deployment is complex and consist of multiple resources that takes a long time to provision. Expected deployment time is over 1 hour.
 
-- Azure Virtual WAN
-  - Virtual Hub (Secured Virtual Hub)
-  - Firewall Policy
-    - Rule Collection Groups
-  - Azure Firewall
-  - Hub Route Tables
-  - Virtual Network Connection (Spoke VNet)
-    - Using custom route table sending branch and internet traffic to firewall
-  - VPN Gateway
-  - VPN Site (On-Prem VNet)
-- Spoke VNet
-  - Azure Bastion Service
-  - Virtual Machine
-- On-Prem VNet
-  - Azure Bastion Service
-  - Virtual Machine
-  - VPN Gateway
-    - Connection (On-Prem to WAN Hub)
-      - Local Network Gateway
-- Log Analytics Workspace (Firewall Diagnostics)  
- 
-<img src="https://github.com/StefanIvemo/vwan-playground/blob/main/media/vwan-playground-topology_v2.png?raw=true">
+## Topologies
 
-## Improvements
+The Azure Virtual WAN Playground deploys the following topologies:
 
-Azure Virtual WAN Playground will evolve over time with new features added regularly. The following improvements are planned:
+### Contoso
 
-- Will add support to select which resource to deploy using `conditions` when it is released.
-- User VPN Gateway and User VPN Configuration.
-- Azure Firewall Workbook added to Log Analytics Workspace.
-- Azure Sentinel.
+<img src="https://github.com/StefanIvemo/vwan-playground/blob/main/media/vwan-playground-contoso-topology.png?raw=true">
 
-Other improvements can be requested by creating a new issue.
+## FAQ
+
+### Can I connect to the servers in the "landing zones" and "On-Premises"?
+
+Yes, there is a Bastion host deployed in the `<nameprefix>-sharedservices-rg` resource group. The Bastion VNet is peered with all VNets in the deployment to allow RDP connection via Bastion. 
+
+### Does name resolution work between VMs?
+
+Yes, there is a Private DNS zone `<nameprefix>.com` that is linked to all VNets and auto registration is enabled.
+
+### Traffic between VMs in Firewall enabled regions are not working, why?
+
+Azure Firewall is blocking all traffic by default. You need to create Firewall rules to allow traffic between "landing zones" and "on-premises".
+
+### Will you provide additional sample configurations?
+
+No, but you can make your own by modifying the existing config files.
 
 ## Contributing
 
-If you find this project interesting and want to contribute, please feel free to submit Pull Requests with suggested improvements.
-
-[![Analytics](https://ga-beacon.appspot.com/UA-179149113-2/welcome-page?pixel)](https://github.com/igrigorik/ga-beacon)
+If you find this project interesting and want to contribute, please feel free to open issues with feature requests or open a pull request with suggested improvements.

@@ -1,0 +1,62 @@
+{
+    "namePrefix": "contoso",
+    "defaultLocation": "westeurope",
+    "sharedServices": {
+        "addressPrefix": "192.168.0.0/24"
+    },
+    "regions": [
+        {
+            "location": "westeurope",
+            "hubAddressPrefix": "10.0.0.0/24",
+            "deployFw": true,
+            "deployVpnGw": true,
+            "deployErGw": false,
+            "deployP2SGw": true,
+            "p2sConfig": {
+                "p2sAddressPrefixes": [
+                    "10.0.4.0/22"
+                ]
+            },
+            "landingZones": {
+                "name": "weu-lz1",
+                "addressPrefix": "10.0.10.0/24"
+            }
+        },
+        {
+            "location": "northeurope",
+            "hubAddressPrefix": "10.10.0.0/24",
+            "deployFw": false,
+            "deployVpnGw": false,
+            "deployErGw": false,
+            "deployP2SGw": false,
+            "landingZones": {
+                "name": "neu-lz1",
+                "addressPrefix": "10.10.10.0/24"
+            }
+        },
+        {
+            "location": "eastus",
+            "hubAddressPrefix": "10.20.0.0/24",
+            "deployFw": true,
+            "deployVpnGw": false,
+            "deployErGw": true,
+            "deployP2SGw": false,
+            "landingZones": {
+                "name": "eus-lz1",
+                "addressPrefix": "10.20.10.0/24"
+            }
+        }
+    ],
+    "onPremSites": [
+        {
+            "location": "westeurope",
+            "addressPrefix": "172.16.0.0/22",
+            "deployVM": true
+        },
+        {
+            "location": "eastus",
+            "addressPrefix": "172.16.4.0/22",
+            "deployVM": true
+        }
+    ]
+}
