@@ -72,9 +72,36 @@ az deployment sub create --name vwan-playground --location westeurope --template
 
 > NOTE: The deployment is complex and consist of multiple resources that takes a long time to provision. Expected deployment time is over 1 hour.
 
-## Topology <<**Needs an update**>>
+## Topologies
 
-The Azure Virtual WAN Playground deploys the following topology:
+The Azure Virtual WAN Playground deploys the following topologies:
+
+### Contoso
+
+
+
+### Fabrikam
+
+<Drawing coming soon...>
+
+### Wingtip
+
+<Drawing coming soon...>
+
+
+## FAQ
+
+### Can I connect to the servers in the "landing zones" and "On-Premises"?
+
+Yes, there is a Bastion host deployed in the `<nameprefix>-sharedservices-rg` resource group. The Bastion VNet is peered with all VNets in the deployment to allow RDP connection via Bastion.
+
+### Does name resolution work between VMs?
+
+Yes, there is a Private DNS zone `<nameprefix>.com` that is linked to all VNets and auto registration is enabled.
+
+### Traffic between VMs in Firewall enabled regions are not working, why?
+
+Azure Firewall is blocking all traffic by default. You need to create Firewall rules to allow traffic between "landing zones" and "on-premises".
 
 ## Contributing
 
