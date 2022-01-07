@@ -1,7 +1,5 @@
 # Azure Virtual WAN Playground
 
-> **[2021-11-03]** Virtual WAN Playground was built using early versions of Bicep. I've started building a new improved version using new Bicep features where I will also provide three separate sample environments based on different config files. The updated version is nearly finished, please try it out and provide feedback, it can be found in the  [vwan-playground-v2](https://github.com/StefanIvemo/vwan-playground/tree/vwan-playground-v2) branch. Enjoy!
-
 Welcome to the Azure Virtual WAN Playground repository! Your one-stop shop for an awesome Azure Virtual WAN lab environment.
 
 ## What is Azure Virtual WAN Playground?
@@ -86,7 +84,7 @@ The Azure Virtual WAN Playground deploys the following topologies:
 
 ### Can I connect to the servers in the "landing zones" and "On-Premises"?
 
-Yes, there is a Bastion host deployed in the `<nameprefix>-sharedservices-rg` resource group. The Bastion VNet is peered with all VNets in the deployment to allow RDP connection via Bastion. 
+Yes, there is a Bastion host deployed in the `<nameprefix>-sharedservices-rg` resource group. The Bastion VNet is peered with all VNets in the deployment to allow RDP connection via Bastion.
 
 ### Does name resolution work between VMs?
 
