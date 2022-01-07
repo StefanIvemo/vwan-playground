@@ -97,6 +97,9 @@ resource peering 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2021-
 module remotePeering 'virtualNetworkPeerings.bicep' = if (peerName != '' && peerId != '') {
   name: 'peeredTo-${vnet.name}'
   scope: resourceGroup(sharedServicesRg)
+  dependsOn: [
+    peering
+  ]
   params: {
     peerId: vnet.id
     peerName: vnet.name
@@ -107,6 +110,9 @@ module remotePeering 'virtualNetworkPeerings.bicep' = if (peerName != '' && peer
 module privateDnsZoneLink 'privateDnsZoneLink.bicep' = {
   name: 'deploy-vnetlink${vnet.name}'
   scope: resourceGroup(sharedServicesRg)
+  dependsOn: [
+    remotePeering
+  ]
   params: {
     privateDnsZoneName: privateDnsZoneName
     vNetId: vnet.id
