@@ -4,7 +4,7 @@ Welcome to the Azure Virtual WAN Playground repository! Your one-stop shop for a
 
 ## What is Azure Virtual WAN Playground?
 
-This repo is dedicated for all poor souls out there who wants to play around with Azure Virtual WAN but don't have unlimited Azure Credit in their subscriptions (most of us 😊). I've put together a template that deploys Azure Virtual WAN and all resources needed to play around with the service and test everything from Site-to-Site VPN, Routing, Secured Virtual Hub, Point-to-Site, Virtual Network connections and more. The goal is to make it easy and fast to spin up an environment when you need to test a feature for a short period of time and then remove it all when finished.
+This repo is dedicated for all poor souls out there who wants to play around with Azure Virtual WAN but don't have unlimited Azure Credit in their subscriptions (most of us 😊). I've put together a template that deploys Azure Virtual WAN and all resources needed to play around with the service and test everything from Site-to-Site VPN, Point-to-Site VPN, Routing, Secured Virtual Hub (Azure Firewall), Virtual Network connections and more. The goal is to make it easy and fast to spin up an environment when you need to test a feature for a short period of time and then remove it all when finished.
 
 ## How it's built
 
