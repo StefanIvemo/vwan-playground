@@ -25,8 +25,8 @@ The template is dynamic and will deploy different environments depending on whic
 | Organization | Config file | Description |
 |:--|:--|:--|
 | Contoso | `contoso.json` | Multiple Virtual WAN hubs in different regions, landing zones and "on-premises" VNets. P2S VPN, S2S VPN, Azure Firewall. |
-| Fabrikam | `fabrikam.json` | Single Virtual WAN hub, landing zone and "on-premises" VNet. P2S VPN, S2S VPN, Azure Firewall. |
-| Wingtip | `wingtip.json` | Single Virtual WAN hub, landing zone. P2S VPN, Azure Firewall. |
+
+> Additional configs are in the works.
 
 Decide which config you want to use and update the `main.bicep` template to use the config file.
 
@@ -77,17 +77,6 @@ az deployment sub create --name vwan-playground --location westeurope --template
 The Azure Virtual WAN Playground deploys the following topologies:
 
 ### Contoso
-
-
-
-### Fabrikam
-
-<Drawing coming soon...>
-
-### Wingtip
-
-<Drawing coming soon...>
-
 
 ## FAQ
 
