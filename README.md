@@ -103,6 +103,10 @@ Yes, there is a Private DNS zone `<nameprefix>.com` that is linked to all VNets 
 
 Azure Firewall is blocking all traffic by default. You need to create Firewall rules to allow traffic between "landing zones" and "on-premises".
 
+### Will you provide additional sample configurations?
+
+No, but you can make your own by modifying the existing config files.
+
 ## Contributing
 
 If you find this project interesting and want to contribute, please feel free to open issues with feature requests or open a pull request with suggested improvements.
