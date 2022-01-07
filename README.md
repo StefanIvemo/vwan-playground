@@ -84,7 +84,7 @@ The Azure Virtual WAN Playground deploys the following topologies:
 
 ### Can I connect to the servers in the "landing zones" and "On-Premises"?
 
-Yes, there is a Bastion host deployed in the `<nameprefix>-sharedservices-rg` resource group. The Bastion VNet is peered with all VNets in the deployment to allow RDP connection via Bastion.
+Yes, there is a Bastion host deployed in the `<nameprefix>-sharedservices-rg` resource group. The Bastion VNet is peered with all VNets in the deployment to allow RDP connection via Bastion. 
 
 ### Does name resolution work between VMs?
 
