@@ -78,6 +78,8 @@ The Azure Virtual WAN Playground deploys the following topologies:
 
 ### Contoso
 
+<img src="https://github.com/StefanIvemo/vwan-playground/blob/vwan-playground-v2/media/vwan-playground-contoso-topology.png?raw=true">
+
 ## FAQ
 
 ### Can I connect to the servers in the "landing zones" and "On-Premises"?
