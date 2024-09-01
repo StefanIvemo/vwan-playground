@@ -11,7 +11,7 @@ param threatIntelMode string = 'Deny'
 param dnsServers array = []
 param enableProxy bool = true
 
-resource parentPolicy 'Microsoft.Network/firewallPolicies@2021-02-01' = {
+resource parentPolicy 'Microsoft.Network/firewallPolicies@2024-01-01' = {
   name: parentPolicyName
   location: location
   properties: {
@@ -19,7 +19,7 @@ resource parentPolicy 'Microsoft.Network/firewallPolicies@2021-02-01' = {
   }
 }
 
-resource childPolicy 'Microsoft.Network/firewallPolicies@2021-02-01' = {
+resource childPolicy 'Microsoft.Network/firewallPolicies@2024-01-01' = {
   name: childPolicyName
   location: location
   properties: {
