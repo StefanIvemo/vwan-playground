@@ -10,7 +10,7 @@ var adresses = [for address in publicIPAddresses: {
   address: address
 }] 
 
-resource firewall 'Microsoft.Network/azureFirewalls@2021-02-01' = {
+resource firewall 'Microsoft.Network/azureFirewalls@2024-01-01' = {
   name: name
   location: location
   properties: {
@@ -23,7 +23,7 @@ resource firewall 'Microsoft.Network/azureFirewalls@2021-02-01' = {
     }
     hubIPAddresses: {
       publicIPs: {
-        addresses: publicIPAddresses == [] ? json('null') : adresses
+        addresses: publicIPAddresses == [] ? null : adresses
         count: publicIPsCount
       }
 
@@ -34,29 +34,30 @@ resource firewall 'Microsoft.Network/azureFirewalls@2021-02-01' = {
   }
 }
 
-resource firewalldiag 'Microsoft.Network/azureFirewalls/providers/diagnosticSettings@2017-05-01-preview' = {
-  name: '${firewall.name}/Microsoft.Insights/diagnostics'
-  location: location
+resource firewalldiag 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'diagnostics'
+  scope: firewall
   properties: {
     workspaceId: workspaceId
+    logAnalyticsDestinationType: 'Dedicated'
     logs: [
       {
-        category: 'AzureFirewallApplicationRule'
         enabled: true
-      }
-      {
-        category: 'AzureFirewallNetworkRule'
-        enabled: true
-      }
-      {
-        category: 'AzureFirewallDnsProxy'
-        enabled: true
+        categoryGroup: 'allLogs'
+        retentionPolicy: {
+          days: 0
+          enabled: false 
+        }
       }
     ]
     metrics: [
       {
-        category: 'AllMetrics'
         enabled: true
+        category: 'AllMetrics'
+        retentionPolicy: {
+          days: 0
+          enabled: false 
+        }
       }
     ]
   }
