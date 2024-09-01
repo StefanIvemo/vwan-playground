@@ -144,6 +144,7 @@ module erGateways 'modules/expressRouteGateways.bicep' = [for (region, i) in vwa
   params: {
     virtualHubId: virtualHubs[i].outputs.resourceId
     gwName: '${virtualHubs[i].outputs.resourceName}-erg'
+    workspaceId: workspace.outputs.resourceId
     location: region.location
   }
 }]
